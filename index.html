@@ -850,6 +850,15 @@ function renderLog() {
     </div>`).join('');
 }
 
+// HTML onclick から呼べるようにグローバル公開
+window.showPage = showPage;
+window.refreshTheme = refreshTheme;
+window.updateCharCount = updateCharCount;
+window.markPosted = markPosted;
+window.markSkip = markSkip;
+window.addEvent = addEvent;
+window.deleteEvent = deleteEvent;
+
 loadData();
 </script>
 </body>
