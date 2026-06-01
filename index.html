@@ -516,55 +516,47 @@
   <div id="post-log"><div class="empty-state">投稿した記録が<br>ここに積み重なっていきます</div></div>
 </div>
 
-<script>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, onSnapshot, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+// ===== Firebase初期化 =====
+const app = initializeApp({
+  apiKey: "AIzaSyBFg7hKeerfd4_dYx-qMLrLWMo8H_glFXE",
+  authDomain: "event-funnel.firebaseapp.com",
+  projectId: "event-funnel",
+  storageBucket: "event-funnel.firebasestorage.app",
+  messagingSenderId: "493083310454",
+  appId: "1:493083310454:web:2360894489ff4466076257"
+});
+const db = getFirestore(app);
+const docRef = doc(db, 'appdata', 'main');
+
 // ===== キラキラアニメーション =====
 (function() {
   const canvas = document.getElementById('sparkle');
   const ctx = canvas.getContext('2d');
   let W, H, particles = [];
-
-  function resize() {
-    W = canvas.width = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-  }
+  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
   resize();
   window.addEventListener('resize', resize);
-
   const colors = ['#f0d080','#e8e0c8','#d4a843','#ffffff','#c8c0b0','#f8f0d8','#b8a878'];
-
   function createParticle() {
-    return {
-      x: Math.random() * W,
-      y: Math.random() * H,
-      r: Math.random() * 3 + 1,
-      alpha: Math.random() * 0.6 + 0.3,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      speed: Math.random() * 0.4 + 0.15,
-      drift: (Math.random() - 0.5) * 0.4,
-      twinkle: Math.random() * Math.PI * 2,
-      twinkleSpeed: Math.random() * 0.04 + 0.015,
-    };
+    return { x: Math.random()*W, y: Math.random()*H, r: Math.random()*3+1, alpha: Math.random()*0.6+0.3,
+      color: colors[Math.floor(Math.random()*colors.length)], speed: Math.random()*0.4+0.15,
+      drift: (Math.random()-0.5)*0.4, twinkle: Math.random()*Math.PI*2, twinkleSpeed: Math.random()*0.04+0.015 };
   }
-
   for (let i = 0; i < 40; i++) particles.push(createParticle());
-
   function draw() {
-    ctx.clearRect(0, 0, W, H);
+    ctx.clearRect(0,0,W,H);
     particles.forEach(p => {
       p.twinkle += p.twinkleSpeed;
       const a = p.alpha * (0.4 + 0.6 * Math.sin(p.twinkle));
-      ctx.save();
-      ctx.globalAlpha = a;
-      ctx.fillStyle = p.color;
-      ctx.shadowColor = p.color;
-      ctx.shadowBlur = 10;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-      p.y -= p.speed;
-      p.x += p.drift;
-      if (p.y < -10) { Object.assign(p, createParticle(), { y: H + 10 }); }
+      ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = p.color;
+      ctx.shadowColor = p.color; ctx.shadowBlur = 10;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill(); ctx.restore();
+      p.y -= p.speed; p.x += p.drift;
+      if (p.y < -10) Object.assign(p, createParticle(), { y: H+10 });
     });
     requestAnimationFrame(draw);
   }
@@ -572,13 +564,42 @@
 })();
 
 // ===== データ =====
-const DB = {
-  get: (k, d) => JSON.parse(localStorage.getItem(k) || JSON.stringify(d)),
-  set: (k, v) => localStorage.setItem(k, JSON.stringify(v))
-};
-let events = DB.get('ts_events', []);
-let postLog = DB.get('ts_postlog', []);
-let todayStatus = DB.get('ts_today_status', {});
+let events = [];
+let postLog = [];
+let todayStatus = {};
+let saveTimer = null;
+
+async function loadData() {
+  const snap = await getDoc(docRef);
+  if (snap.exists()) {
+    const d = snap.data();
+    events = d.events || [];
+    postLog = d.postLog || [];
+    todayStatus = d.todayStatus || {};
+  }
+  renderToday();
+  // リアルタイム同期
+  onSnapshot(docRef, snap => {
+    if (snap.exists()) {
+      const d = snap.data();
+      events = d.events || [];
+      postLog = d.postLog || [];
+      todayStatus = d.todayStatus || {};
+      const activePage = document.querySelector('.page.active')?.id?.replace('page-','');
+      if (activePage === 'today') renderToday();
+      if (activePage === 'calendar') renderEventList();
+      if (activePage === 'schedule') renderSchedule();
+      if (activePage === 'log') renderLog();
+    }
+  });
+}
+
+function saveData() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    setDoc(docRef, { events, postLog, todayStatus });
+  }, 500);
+}
 
 // ===== テーマ =====
 const THEMES = {
@@ -667,7 +688,7 @@ function renderToday() {
   if (!todayStatus[dateKey]?.theme) {
     const theme = pickTheme(next.daysLeft);
     todayStatus[dateKey] = { ...(todayStatus[dateKey]||{}), theme, daysLeft: next.daysLeft };
-    DB.set('ts_today_status', todayStatus);
+    saveData();
   }
   applyTheme(todayStatus[dateKey].theme);
 
@@ -696,7 +717,7 @@ function refreshTheme() {
   const daysLeft = todayStatus[dateKey]?.daysLeft ?? upcoming[0].daysLeft;
   const theme = pickTheme(daysLeft);
   todayStatus[dateKey] = { ...(todayStatus[dateKey]||{}), theme };
-  DB.set('ts_today_status', todayStatus);
+  saveData();
   applyTheme(theme);
 }
 
@@ -705,17 +726,16 @@ function updateCharCount() {
   document.getElementById('char-count').textContent = len;
   const dateKey = new Date().toISOString().split('T')[0];
   todayStatus[dateKey] = { ...(todayStatus[dateKey]||{}), text: document.getElementById('write-text').value };
-  DB.set('ts_today_status', todayStatus);
+  saveData();
 }
 
 function markPosted() {
   const dateKey = new Date().toISOString().split('T')[0];
   todayStatus[dateKey] = { ...(todayStatus[dateKey]||{}), posted: true };
-  DB.set('ts_today_status', todayStatus);
   const text = document.getElementById('write-text').value;
   const theme = todayStatus[dateKey].theme;
   postLog.push({ date: dateKey, theme: theme?.text||'', text });
-  DB.set('ts_postlog', postLog);
+  saveData();
   const btn = document.getElementById('btn-done');
   btn.textContent = '✓ 今日は投稿した！'; btn.classList.add('posted');
 }
@@ -723,7 +743,7 @@ function markPosted() {
 function markSkip() {
   const dateKey = new Date().toISOString().split('T')[0];
   todayStatus[dateKey] = { ...(todayStatus[dateKey]||{}), skipped: true };
-  DB.set('ts_today_status', todayStatus);
+  saveData();
   alert('それでいい。また明日 ☻');
 }
 
@@ -734,7 +754,7 @@ function addEvent() {
   const type = document.getElementById('event-type').value;
   if (!name || !date) { alert('イベント名と日付を入力してください'); return; }
   events.push({ id: Date.now(), name, date, type });
-  DB.set('ts_events', events);
+  saveData();
   document.getElementById('event-name').value = '';
   document.getElementById('event-date').value = '';
   renderEventList();
@@ -742,7 +762,7 @@ function addEvent() {
 
 function deleteEvent(id) {
   events = events.filter(e => e.id !== id);
-  DB.set('ts_events', events);
+  saveData();
   renderEventList();
 }
 
@@ -830,7 +850,7 @@ function renderLog() {
     </div>`).join('');
 }
 
-renderToday();
+loadData();
 </script>
 </body>
 </html>
