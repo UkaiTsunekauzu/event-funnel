@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>今日の探究テーマ</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #d4a843;
+      --gold-light: #f0d080;
+      --coral: #e8806a;
+      --sage: #7aab8a;
+      --indigo: #6b7fd4;
+      --rose: #e07090;
+      --cream: #fefcf9;
+      --warm-white: #ffffff;
+      --ink: #2d2820;
+      --mid-ink: #6b5d52;
+      --light-ink: #a89888;
+    }
+
+    body {
+      font-family: 'Hiragino Mincho ProN', 'Hiragino Kaku Gothic ProN', serif;
+      background: var(--cream);
+      color: var(--ink);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* キラキラ背景 */
+    canvas#sparkle {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 1;
+    }
+
+    /* 和紙テクスチャ感 */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 20%, rgba(212,168,67,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 80%, rgba(232,128,106,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse at 60% 10%, rgba(107,127,212,0.06) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ナビ */
+    nav {
+      display: flex;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(212,168,67,0.2);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 20px rgba(212,168,67,0.1);
+    }
+    nav button {
+      flex: 1;
+      padding: 15px 8px;
+      border: none;
+      background: transparent;
+      font-size: 13px;
+      color: var(--light-ink);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.25s;
+      font-family: inherit;
+    }
+    nav button.active {
+      color: var(--gold);
+      border-bottom-color: var(--gold);
+      font-weight: 700;
+    }
+
+    /* ページ */
+    .page { display: none; padding: 24px 20px 80px; max-width: 480px; margin: 0 auto; position: relative; z-index: 1; }
+    .page.active { display: block; }
+
+    /* ヘッダー */
+    .today-header {
+      text-align: center;
+      padding: 24px 0 20px;
+    }
+    .today-date {
+      font-size: 11px;
+      color: var(--light-ink);
+      letter-spacing: 0.2em;
+      margin-bottom: 4px;
+    }
+    .today-eyebrow {
+      font-size: 10px;
+      color: var(--gold);
+      font-weight: 700;
+      letter-spacing: 0.3em;
+    }
+
+    /* 装飾ライン */
+    .deco-line {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 12px 0;
+    }
+    .deco-line::before, .deco-line::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(212,168,67,0.4), transparent);
+    }
+    .deco-line span {
+      font-size: 14px;
+      color: var(--gold);
+    }
+
+    /* テーマカード */
+    @property --border-angle {
+      syntax: '<angle>';
+      initial-value: 0deg;
+      inherits: false;
+    }
+    @keyframes borderSpin {
+      to { --border-angle: 360deg; }
+    }
+    .theme-card {
+      position: relative;
+      border-radius: 22px;
+      margin-bottom: 14px;
+      background: var(--warm-white);
+      padding: 28px 24px 24px;
+      box-shadow: 0 4px 24px rgba(212,168,67,0.15);
+    }
+    .theme-card::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 24px;
+      background: conic-gradient(
+        from var(--border-angle),
+        #a07820 0%,
+        #c8a030 15%,
+        #f0d060 28%,
+        #fff8e0 38%,
+        #ffffff 43%,
+        #fff8e0 48%,
+        #f0d060 58%,
+        #c8a030 72%,
+        #a07820 85%,
+        #c8a030 92%,
+        #a07820 100%
+      );
+      animation: borderSpin 4s linear infinite;
+      z-index: -1;
+    }
+    .theme-card-inner {
+      position: relative;
+    }
+
+    .theme-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .theme-icon { font-size: 32px; line-height: 1; }
+    .btn-refresh {
+      background: rgba(212,168,67,0.08);
+      border: 1px solid rgba(212,168,67,0.22);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 11px;
+      color: var(--gold);
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.2s;
+    }
+    .btn-refresh:hover { background: rgba(212,168,67,0.18); }
+
+    .theme-text {
+      font-size: 21px;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.6;
+      margin-bottom: 20px;
+      font-family: 'Hiragino Mincho ProN', serif;
+      letter-spacing: 0.02em;
+    }
+    .theme-hint {
+      font-size: 13px;
+      color: var(--mid-ink);
+      line-height: 2;
+      border-top: 1px solid rgba(212,168,67,0.18);
+      padding-top: 16px;
+    }
+
+    /* カウントダウン */
+    .event-countdown {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(122,171,138,0.1);
+      border: 1px solid rgba(122,171,138,0.3);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 14px;
+      font-size: 13px;
+      color: var(--sage);
+    }
+    .event-countdown .days { font-weight: 800; font-size: 20px; }
+    .event-countdown .name { flex: 1; font-weight: 600; color: var(--ink); }
+
+    /* 書くエリア */
+    .write-area {
+      background: var(--warm-white);
+      border: 1px solid rgba(212,168,67,0.2);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.04);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .write-area:focus-within {
+      border-color: rgba(212,168,67,0.5);
+      box-shadow: 0 4px 20px rgba(212,168,67,0.1);
+    }
+    .write-area label {
+      font-size: 11px;
+      color: var(--light-ink);
+      display: block;
+      margin-bottom: 12px;
+      letter-spacing: 0.05em;
+    }
+    textarea {
+      width: 100%;
+      border: none;
+      outline: none;
+      font-size: 15px;
+      line-height: 2;
+      color: var(--ink);
+      resize: none;
+      background: transparent;
+      font-family: 'Hiragino Mincho ProN', serif;
+      min-height: 160px;
+    }
+    textarea::placeholder { color: #d0c8c0; }
+    .char-count {
+      text-align: right;
+      font-size: 11px;
+      color: var(--light-ink);
+      margin-top: 8px;
+    }
+
+    /* ボタン */
+    @keyframes btnShimmer {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .btn-done {
+      width: 100%;
+      padding: 17px;
+      background: linear-gradient(270deg, #f0c060, #e87060, #c070d0, #6090e0, #50c090, #e0a040);
+      background-size: 400% 400%;
+      animation: btnShimmer 4s ease infinite;
+      color: white;
+      border: none;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      letter-spacing: 0.1em;
+      box-shadow: 0 4px 24px rgba(212,168,67,0.25);
+      transition: transform 0.1s, box-shadow 0.2s;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+    .btn-done:active { transform: scale(0.97); }
+    .btn-done.posted {
+      background: linear-gradient(270deg, #50c090, #60b0d0, #7aab8a, #50c090);
+      background-size: 300% 300%;
+      animation: btnShimmer 3s ease infinite;
+      box-shadow: 0 4px 20px rgba(80,192,144,0.3);
+    }
+    .btn-skip {
+      width: 100%;
+      padding: 13px;
+      background: transparent;
+      color: var(--light-ink);
+      border: none;
+      font-size: 12px;
+      cursor: pointer;
+      margin-top: 8px;
+      font-family: inherit;
+    }
+
+    /* フォーム */
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--light-ink);
+      letter-spacing: 0.2em;
+      margin-bottom: 14px;
+      margin-top: 6px;
+    }
+    .add-event-card {
+      background: var(--warm-white);
+      border: 1px solid rgba(212,168,67,0.2);
+      border-radius: 20px;
+      padding: 22px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.04);
+    }
+    .form-group { margin-bottom: 14px; }
+    .form-group label {
+      font-size: 11px;
+      color: var(--light-ink);
+      display: block;
+      margin-bottom: 7px;
+    }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid rgba(212,168,67,0.2);
+      border-radius: 12px;
+      font-size: 14px;
+      color: var(--ink);
+      background: var(--cream);
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus { border-color: var(--gold); }
+    .btn-add {
+      width: 100%;
+      padding: 14px;
+      background: var(--ink);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.2s;
+    }
+    .btn-add:hover { background: var(--mid-ink); }
+
+    /* イベントリスト */
+    .event-item {
+      background: var(--warm-white);
+      border: 1px solid rgba(212,168,67,0.15);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    }
+    .event-name { font-size: 14px; font-weight: 700; color: var(--ink); }
+    .event-date-txt { font-size: 12px; color: var(--light-ink); margin-top: 4px; }
+    .event-days-left { text-align: right; }
+    .event-days-left .num { font-size: 24px; font-weight: 800; color: var(--gold); }
+    .event-days-left .unit { font-size: 11px; color: var(--light-ink); }
+    .btn-delete { background: none; border: none; color: #d0c0b0; cursor: pointer; font-size: 20px; padding: 4px 4px 4px 12px; }
+
+    /* スケジュール */
+    .next-event-banner {
+      background: linear-gradient(135deg, rgba(212,168,67,0.1), rgba(232,128,106,0.08));
+      border: 1px solid rgba(212,168,67,0.25);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+    .next-event-banner .label { font-size: 11px; color: var(--light-ink); margin-bottom: 4px; }
+    .next-event-banner .name { font-size: 16px; font-weight: 700; color: var(--ink); }
+    .next-event-banner .days { font-size: 13px; color: var(--gold); margin-top: 4px; font-weight: 600; }
+
+    .schedule-item { display: flex; gap: 14px; margin-bottom: 20px; }
+    .schedule-dot-wrap { display: flex; flex-direction: column; align-items: center; padding-top: 3px; }
+    .schedule-dot {
+      width: 11px; height: 11px; border-radius: 50%;
+      background: var(--gold);
+      flex-shrink: 0;
+      box-shadow: 0 0 6px rgba(212,168,67,0.5);
+    }
+    .schedule-dot.done { background: var(--sage); box-shadow: 0 0 6px rgba(122,171,138,0.5); }
+    .schedule-dot.future { background: #e0d8d0; box-shadow: none; }
+    .schedule-line { width: 1px; flex: 1; background: rgba(212,168,67,0.15); min-height: 36px; margin-top: 4px; }
+    .schedule-content { flex: 1; padding-bottom: 8px; }
+    .schedule-day { font-size: 11px; color: var(--light-ink); margin-bottom: 4px; letter-spacing: 0.05em; }
+    .schedule-theme { font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+    .schedule-desc { font-size: 12px; color: var(--mid-ink); line-height: 1.7; }
+
+    /* 記録 */
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+    .stat-card {
+      background: var(--warm-white);
+      border: 1px solid rgba(212,168,67,0.2);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.04);
+    }
+    .stat-num { font-size: 36px; font-weight: 800; color: var(--gold); }
+    .stat-label { font-size: 11px; color: var(--light-ink); margin-top: 4px; }
+
+    .post-log-item {
+      background: var(--warm-white);
+      border: 1px solid rgba(212,168,67,0.12);
+      border-radius: 14px;
+      padding: 15px 16px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+    .post-log-date { font-size: 11px; color: var(--light-ink); margin-bottom: 5px; }
+    .post-log-theme { font-size: 13px; font-weight: 700; color: var(--gold); margin-bottom: 5px; }
+    .post-log-text { font-size: 12px; color: var(--mid-ink); line-height: 1.7; }
+
+    .empty-state { text-align: center; padding: 48px 20px; color: var(--light-ink); font-size: 14px; line-height: 2; }
+  </style>
+</head>
+<body>
+
+<canvas id="sparkle"></canvas>
+
+<nav>
+  <button class="active" onclick="showPage('today', this)">✦ 今日</button>
+  <button onclick="showPage('calendar', this)">◎ イベント</button>
+  <button onclick="showPage('schedule', this)">≋ 流れ</button>
+  <button onclick="showPage('log', this)">◈ 記録</button>
+</nav>
+
+<!-- 今日 -->
+<div id="page-today" class="page active">
+  <div class="today-header">
+    <div class="today-date" id="today-date"></div>
+    <div class="deco-line"><span>✦</span></div>
+    <div class="today-eyebrow">TODAY'S THEME</div>
+  </div>
+
+  <div id="event-countdown-area"></div>
+
+  <div class="theme-card">
+    <div class="theme-card-top">
+      <span class="theme-icon" id="theme-icon">🌸</span>
+      <button class="btn-refresh" onclick="refreshTheme()">別のテーマに ↺</button>
+    </div>
+    <div class="theme-text" id="theme-text">まず、イベントを登録しよう</div>
+    <div class="theme-hint" id="theme-hint">「イベント」タブからセッションや講座の日程を追加すると、今日のテーマが現れます。</div>
+  </div>
+
+  <div class="write-area">
+    <label>✧ 浮かんだまま、ここに（書けたら）</label>
+    <textarea id="write-text" placeholder="きれいにまとめなくていい。&#10;ぽろっと出てきたものを、そのまま。" oninput="updateCharCount()"></textarea>
+    <div class="char-count"><span id="char-count">0</span> 文字</div>
+  </div>
+
+  <button class="btn-done" id="btn-done" onclick="markPosted()">✓ 投稿した！</button>
+  <button class="btn-skip" onclick="markSkip()">今日はパス　― それでいい ―</button>
+</div>
+
+<!-- イベント -->
+<div id="page-calendar" class="page">
+  <div class="section-title">イベントを登録する</div>
+  <div class="add-event-card">
+    <div class="form-group">
+      <label>イベント名</label>
+      <input type="text" id="event-name" placeholder="例：スケッチセラピー体験会">
+    </div>
+    <div class="form-group">
+      <label>開催日</label>
+      <input type="date" id="event-date">
+    </div>
+    <div class="form-group">
+      <label>種類</label>
+      <select id="event-type">
+        <option value="session">個人セッション</option>
+        <option value="group">グループ講座</option>
+        <option value="event">体験イベント</option>
+        <option value="other">その他</option>
+      </select>
+    </div>
+    <button class="btn-add" onclick="addEvent()">＋ 登録する</button>
+  </div>
+  <div class="section-title">登録中のイベント</div>
+  <div id="event-list"><div class="empty-state">まだ登録されていません</div></div>
+</div>
+
+<!-- 流れ -->
+<div id="page-schedule" class="page">
+  <div class="section-title">投稿の流れ</div>
+  <div id="schedule-content"><div class="empty-state">イベントを登録すると<br>ここに流れが表示されます</div></div>
+</div>
+
+<!-- 記録 -->
+<div id="page-log" class="page">
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-num" id="stat-posted">0</div>
+      <div class="stat-label">投稿した日</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="stat-streak">0</div>
+      <div class="stat-label">連続日数</div>
+    </div>
+  </div>
+  <div class="section-title">投稿の記録</div>
+  <div id="post-log"><div class="empty-state">投稿した記録が<br>ここに積み重なっていきます</div></div>
+</div>
+
+<script>
+// ===== キラキラアニメーション =====
+(function() {
+  const canvas = document.getElementById('sparkle');
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const colors = ['#f0d080','#e8e0c8','#d4a843','#ffffff','#c8c0b0','#f8f0d8','#b8a878'];
+
+  function createParticle() {
+    return {
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 3 + 1,
+      alpha: Math.random() * 0.6 + 0.3,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      speed: Math.random() * 0.4 + 0.15,
+      drift: (Math.random() - 0.5) * 0.4,
+      twinkle: Math.random() * Math.PI * 2,
+      twinkleSpeed: Math.random() * 0.04 + 0.015,
+    };
+  }
+
+  for (let i = 0; i < 40; i++) particles.push(createParticle());
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => {
+      p.twinkle += p.twinkleSpeed;
+      const a = p.alpha * (0.4 + 0.6 * Math.sin(p.twinkle));
+      ctx.save();
+      ctx.globalAlpha = a;
+      ctx.fillStyle = p.color;
+      ctx.shadowColor = p.color;
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      p.y -= p.speed;
+      p.x += p.drift;
+      if (p.y < -10) { Object.assign(p, createParticle(), { y: H + 10 }); }
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ===== データ =====
+const DB = {
+  get: (k, d) => JSON.parse(localStorage.getItem(k) || JSON.stringify(d)),
+  set: (k, v) => localStorage.setItem(k, JSON.stringify(v))
+};
+let events = DB.get('ts_events', []);
+let postLog = DB.get('ts_postlog', []);
+let todayStatus = DB.get('ts_today_status', {});
+
+// ===== テーマ =====
+const THEMES = {
+  far: [
+    { icon: '🌊', text: '最近ちょっとモヤってたこと、、、', hint: '答えを出さなくていい。モヤのまま、言葉にしてみる。' },
+    { icon: '🔍', text: 'ふと、あれ？って思った瞬間、、、', hint: 'どんな小さなことでも。その「あれ？」をそのまま書いてみる。' },
+    { icon: '🌱', text: '誰かの言葉で、なんか残ったやつ、、、', hint: '最近聞いた言葉や読んだ言葉で、なぜか引っかかったものを。' },
+    { icon: '🌀', text: 'まだうまく言えないんだけど、なんか、、、', hint: '言葉にならなくていい。近い言葉を探してみる。' },
+    { icon: '☁️', text: 'なんか最近、気になってること、、、', hint: '理由はなくていい。気になってること、そのまま書いてみる。' },
+    { icon: '🍃', text: 'なんとなく、ちがうなって感じた瞬間、、、', hint: 'ちがうと感じた、そのままを。正しくなくていい。' },
+  ],
+  mid: [
+    { icon: '💫', text: 'ほどけていくって、私にとっては、、、', hint: '足すんじゃなく、ほどけていく。あなたにとってそれはどういう体験？' },
+    { icon: '🔑', text: '自分の中に答えがあるなと感じた瞬間、、、', hint: 'いつ、どんな場面で気づいた？ひとつのエピソードを。' },
+    { icon: '✨', text: 'いまイチだったあの頃って、、、', hint: 'あの頃の自分に、今なら何か言えそう？' },
+    { icon: '🌙', text: '探究してて面白かったこと、最近、、、', hint: '答えじゃなくて、問いそのものが面白かったことを。' },
+    { icon: '🪞', text: 'そっか、そういうことか、ってなった瞬間、、、', hint: 'ふと腑に落ちた、あの瞬間。どんな場面だった？' },
+  ],
+  near: [
+    { icon: '🎨', text: 'セッションで「あ、」ってなった瞬間、、、', hint: 'クライアントが気づいた瞬間、あなたが目撃したもの。' },
+    { icon: '🌿', text: '待ってたら、出てきた、あれ、、、', hint: '焦らずただそこにいたら、起きたこと。' },
+    { icon: '💡', text: '今、これだけは確かだなと思ってること、、、', hint: '長年の探究の中で、今確信していること。ひとつだけ。' },
+  ],
+  soon: [
+    { icon: '🚀', text: 'こんな人に来てほしいな、正直、、、', hint: '誰かに語りかけるように。自然な言葉で。' },
+    { icon: '🌸', text: 'このセッションで起きること、たぶん、、、', hint: 'あなたが感じていることを、そのまま。' },
+  ],
+  tomorrow: [
+    { icon: '🌅', text: '明日を前に、今感じてること、、、', hint: 'ワクワクでも緊張でも。今この感じをそのまま。' },
+  ]
+};
+
+function getThemeArr(daysLeft) {
+  if (daysLeft > 21) return THEMES.far;
+  if (daysLeft > 7)  return THEMES.mid;
+  if (daysLeft > 3)  return THEMES.near;
+  if (daysLeft > 1)  return THEMES.soon;
+  return THEMES.tomorrow;
+}
+
+function pickTheme(daysLeft) {
+  const arr = getThemeArr(daysLeft);
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// ===== ページ切り替え =====
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (id === 'today')    renderToday();
+  if (id === 'calendar') renderEventList();
+  if (id === 'schedule') renderSchedule();
+  if (id === 'log')      renderLog();
+}
+
+// ===== 今日 =====
+function renderToday() {
+  const today = new Date();
+  document.getElementById('today-date').textContent =
+    today.toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric', weekday:'long' });
+
+  const upcoming = getUpcomingEvents();
+  const countdownArea = document.getElementById('event-countdown-area');
+
+  if (!upcoming.length) {
+    document.getElementById('theme-icon').textContent = '🌸';
+    document.getElementById('theme-text').textContent = 'まず、イベントを登録しよう';
+    document.getElementById('theme-hint').textContent = '「イベント」タブから日程を追加すると、今日のテーマが現れます。';
+    countdownArea.innerHTML = '';
+    return;
+  }
+
+  const next = upcoming[0];
+  countdownArea.innerHTML = `
+    <div class="event-countdown">
+      <span>📅</span>
+      <span class="name">${next.name}</span>
+      <span>まで</span>
+      <span class="days">${next.daysLeft}</span>
+      <span>日</span>
+    </div>`;
+
+  const dateKey = today.toISOString().split('T')[0];
+  if (!todayStatus[dateKey]?.theme) {
+    const theme = pickTheme(next.daysLeft);
+    todayStatus[dateKey] = { ...(todayStatus[dateKey]||{}), theme, daysLeft: next.daysLeft };
+    DB.set('ts_today_status', todayStatus);
+  }
+  applyTheme(todayStatus[dateKey].theme);
+
+  if (todayStatus[dateKey]?.text) {
+    document.getElementById('write-text').value = todayStatus[dateKey].text;
+    updateCharCount();
+  }
+  const btn = document.getElementById('btn-done');
+  if (todayStatus[dateKey]?.posted) {
+    btn.textContent = '✓ 今日は投稿した！'; btn.classList.add('posted');
+  } else {
+    btn.textContent = '✓ 投稿した！'; btn.classList.remove('posted');
+  }
+}
+
+function applyTheme(t) {
+  document.getElementById('theme-icon').textContent = t.icon;
+  document.getElementById('theme-text').textContent = t.text;
+  document.getElementById('theme-hint').textContent = t.hint;
+}
+
+function refreshTheme() {
+  const upcoming = getUpcomingEvents();
+  if (!upcoming.length) return;
+  const dateKey = new Date().toISOString().split('T')[0];
+  const daysLeft = todayStatus[dateKey]?.daysLeft ?? upcoming[0].daysLeft;
+  const theme = pickTheme(daysLeft);
+  todayStatus[dateKey] = { ...(todayStatus[dateKey]||{}), theme };
+  DB.set('ts_today_status', todayStatus);
+  applyTheme(theme);
+}
+
+function updateCharCount() {
+  const len = document.getElementById('write-text').value.length;
+  document.getElementById('char-count').textContent = len;
+  const dateKey = new Date().toISOString().split('T')[0];
+  todayStatus[dateKey] = { ...(todayStatus[dateKey]||{}), text: document.getElementById('write-text').value };
+  DB.set('ts_today_status', todayStatus);
+}
+
+function markPosted() {
+  const dateKey = new Date().toISOString().split('T')[0];
+  todayStatus[dateKey] = { ...(todayStatus[dateKey]||{}), posted: true };
+  DB.set('ts_today_status', todayStatus);
+  const text = document.getElementById('write-text').value;
+  const theme = todayStatus[dateKey].theme;
+  postLog.push({ date: dateKey, theme: theme?.text||'', text });
+  DB.set('ts_postlog', postLog);
+  const btn = document.getElementById('btn-done');
+  btn.textContent = '✓ 今日は投稿した！'; btn.classList.add('posted');
+}
+
+function markSkip() {
+  const dateKey = new Date().toISOString().split('T')[0];
+  todayStatus[dateKey] = { ...(todayStatus[dateKey]||{}), skipped: true };
+  DB.set('ts_today_status', todayStatus);
+  alert('それでいい。また明日 ☻');
+}
+
+// ===== イベント =====
+function addEvent() {
+  const name = document.getElementById('event-name').value.trim();
+  const date = document.getElementById('event-date').value;
+  const type = document.getElementById('event-type').value;
+  if (!name || !date) { alert('イベント名と日付を入力してください'); return; }
+  events.push({ id: Date.now(), name, date, type });
+  DB.set('ts_events', events);
+  document.getElementById('event-name').value = '';
+  document.getElementById('event-date').value = '';
+  renderEventList();
+}
+
+function deleteEvent(id) {
+  events = events.filter(e => e.id !== id);
+  DB.set('ts_events', events);
+  renderEventList();
+}
+
+function getUpcomingEvents() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  return events
+    .map(e => ({ ...e, daysLeft: Math.ceil((new Date(e.date+'T00:00:00') - today) / 86400000) }))
+    .filter(e => e.daysLeft >= 0)
+    .sort((a,b) => a.daysLeft - b.daysLeft);
+}
+
+function renderEventList() {
+  const list = document.getElementById('event-list');
+  const upcoming = getUpcomingEvents();
+  if (!upcoming.length) { list.innerHTML = '<div class="empty-state">まだ登録されていません</div>'; return; }
+  list.innerHTML = upcoming.map(e => `
+    <div class="event-item">
+      <div>
+        <div class="event-name">${e.name}</div>
+        <div class="event-date-txt">${new Date(e.date+'T00:00:00').toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'})}</div>
+      </div>
+      <div style="display:flex;align-items:center">
+        <div class="event-days-left">
+          <div class="num">${e.daysLeft}</div>
+          <div class="unit">日後</div>
+        </div>
+        <button class="btn-delete" onclick="deleteEvent(${e.id})">×</button>
+      </div>
+    </div>`).join('');
+}
+
+// ===== スケジュール =====
+function renderSchedule() {
+  const upcoming = getUpcomingEvents();
+  const container = document.getElementById('schedule-content');
+  if (!upcoming.length) { container.innerHTML = '<div class="empty-state">イベントを登録すると<br>ここに流れが表示されます</div>'; return; }
+  const next = upcoming[0];
+  const phases = [
+    { label: '3週間以上前', theme: '日常の気づき・モヤ', desc: '日々の違和感や問いをそのまま言葉に', done: next.daysLeft < 21 },
+    { label: '2週間前', theme: '自分の内側への問い', desc: '体験談や気づきを探究しながら', done: next.daysLeft < 14 },
+    { label: '1週間前', theme: 'セッションの体験談', desc: 'あなたが目撃した変化や気づきを', done: next.daysLeft < 7 },
+    { label: '3日前', theme: 'さりげない案内', desc: 'こんな人に来てほしい、という気持ちを', done: next.daysLeft < 3 },
+    { label: '前日', theme: '明日への気持ち', desc: 'ワクワクも緊張もそのまま', done: next.daysLeft < 1 },
+    { label: '当日', theme: next.name, desc: '今日がその日！', done: next.daysLeft === 0 },
+  ];
+  container.innerHTML = `
+    <div class="next-event-banner">
+      <div class="label">次のイベント</div>
+      <div class="name">${next.name}</div>
+      <div class="days">あと ${next.daysLeft} 日</div>
+    </div>
+    ${phases.map((p,i) => `
+      <div class="schedule-item">
+        <div class="schedule-dot-wrap">
+          <div class="schedule-dot ${p.done?'done':'future'}"></div>
+          ${i<phases.length-1?'<div class="schedule-line"></div>':''}
+        </div>
+        <div class="schedule-content">
+          <div class="schedule-day">${p.label}</div>
+          <div class="schedule-theme">${p.theme}</div>
+          <div class="schedule-desc">${p.desc}</div>
+        </div>
+      </div>`).join('')}`;
+}
+
+// ===== 記録 =====
+function renderLog() {
+  document.getElementById('stat-posted').textContent = postLog.length;
+  let streak = 0;
+  const today = new Date();
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today); d.setDate(d.getDate()-i);
+    const key = d.toISOString().split('T')[0];
+    if (todayStatus[key]?.posted) streak++;
+    else if (i > 0) break;
+  }
+  document.getElementById('stat-streak').textContent = streak;
+  const logEl = document.getElementById('post-log');
+  if (!postLog.length) { logEl.innerHTML = '<div class="empty-state">投稿した記録が<br>ここに積み重なっていきます</div>'; return; }
+  logEl.innerHTML = [...postLog].reverse().map(p => `
+    <div class="post-log-item">
+      <div class="post-log-date">${new Date(p.date+'T00:00:00').toLocaleDateString('ja-JP',{month:'long',day:'numeric'})}</div>
+      <div class="post-log-theme">${p.theme}</div>
+      <div class="post-log-text">${p.text?p.text.slice(0,80)+(p.text.length>80?'…':''):'（メモなし）'}</div>
+    </div>`).join('');
+}
+
+renderToday();
+</script>
+</body>
+</html>
