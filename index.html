@@ -1,865 +1,744 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>今日の探究テーマ</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>魂の神様診断</title>
+  <meta property="og:title" content="魂の神様診断" />
+  <meta property="og:description" content="6つの問いに答えるだけで、あなたの魂が共鳴する神様と今世での活かし方がわかります。" />
+  <meta property="og:type" content="website" />
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --gold: #d4a843;
-      --gold-light: #f0d080;
-      --coral: #e8806a;
-      --sage: #7aab8a;
-      --indigo: #6b7fd4;
-      --rose: #e07090;
-      --cream: #fefcf9;
-      --warm-white: #ffffff;
-      --ink: #2d2820;
-      --mid-ink: #6b5d52;
-      --light-ink: #a89888;
+      --gold:    #b07d2a;
+      --gold2:   #d4a843;
+      --red:     #9b2335;
+      --vermil:  #c0392b;
+      --ink:     #2c1810;
+      --ink2:    #4a3728;
+      --washi:   #faf7f0;
+      --washi2:  #f3ede0;
+      --washi3:  #ede4d0;
+      --muted:   #7a6a5a;
+      --border:  rgba(176,125,42,0.25);
+      --shadow:  rgba(44,24,16,0.1);
     }
 
+    html { scroll-behavior: smooth; }
+
     body {
-      font-family: 'Hiragino Mincho ProN', 'Hiragino Kaku Gothic ProN', serif;
-      background: var(--cream);
+      font-family: 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif JP', Georgia, serif;
+      background: var(--washi);
       color: var(--ink);
       min-height: 100vh;
       overflow-x: hidden;
+      line-height: 1.8;
     }
 
-    /* キラキラ背景 */
-    canvas#sparkle {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 0;
-      opacity: 1;
-    }
-
-    /* 和紙テクスチャ感 */
+    /* 和紙テクスチャ背景 */
     body::before {
       content: '';
-      position: fixed;
-      inset: 0;
+      position: fixed; inset: 0; z-index: 0;
       background:
-        radial-gradient(ellipse at 20% 20%, rgba(212,168,67,0.08) 0%, transparent 60%),
-        radial-gradient(ellipse at 80% 80%, rgba(232,128,106,0.08) 0%, transparent 60%),
-        radial-gradient(ellipse at 60% 10%, rgba(107,127,212,0.06) 0%, transparent 50%);
+        radial-gradient(ellipse 70% 50% at 50% 0%,   rgba(176,125,42,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 0%  100%,  rgba(192,57,43,0.05)  0%, transparent 55%),
+        radial-gradient(ellipse 60% 40% at 100% 60%,  rgba(176,125,42,0.05) 0%, transparent 55%);
       pointer-events: none;
-      z-index: 0;
     }
 
-    /* ナビ */
-    nav {
-      display: flex;
-      background: rgba(255,255,255,0.85);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid rgba(212,168,67,0.2);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 2px 20px rgba(212,168,67,0.1);
-    }
-    nav button {
-      flex: 1;
-      padding: 15px 8px;
-      border: none;
-      background: transparent;
-      font-size: 13px;
-      color: var(--light-ink);
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: all 0.25s;
-      font-family: inherit;
-    }
-    nav button.active {
-      color: var(--gold);
-      border-bottom-color: var(--gold);
-      font-weight: 700;
-    }
-
-    /* ページ */
-    .page { display: none; padding: 24px 20px 80px; max-width: 480px; margin: 0 auto; position: relative; z-index: 1; }
-    .page.active { display: block; }
-
-    /* ヘッダー */
-    .today-header {
-      text-align: center;
-      padding: 24px 0 20px;
-    }
-    .today-date {
-      font-size: 11px;
-      color: var(--light-ink);
-      letter-spacing: 0.2em;
-      margin-bottom: 4px;
-    }
-    .today-eyebrow {
-      font-size: 10px;
-      color: var(--gold);
-      font-weight: 700;
-      letter-spacing: 0.3em;
-    }
-
-    /* 装飾ライン */
-    .deco-line {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin: 12px 0;
-    }
-    .deco-line::before, .deco-line::after {
+    /* 青海波パターン（超薄い） */
+    body::after {
       content: '';
-      flex: 1;
-      height: 1px;
-      background: linear-gradient(to right, transparent, rgba(212,168,67,0.4), transparent);
-    }
-    .deco-line span {
-      font-size: 14px;
-      color: var(--gold);
+      position: fixed; inset: 0; z-index: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='40'%3E%3Cellipse cx='40' cy='40' rx='38' ry='22' fill='none' stroke='rgba(176,125,42,0.06)' stroke-width='1'/%3E%3Cellipse cx='0'  cy='40' rx='38' ry='22' fill='none' stroke='rgba(176,125,42,0.06)' stroke-width='1'/%3E%3Cellipse cx='80' cy='40' rx='38' ry='22' fill='none' stroke='rgba(176,125,42,0.06)' stroke-width='1'/%3E%3Cellipse cx='20' cy='18' rx='18' ry='10' fill='none' stroke='rgba(176,125,42,0.04)' stroke-width='1'/%3E%3Cellipse cx='60' cy='18' rx='18' ry='10' fill='none' stroke='rgba(176,125,42,0.04)' stroke-width='1'/%3E%3C/svg%3E");
+      pointer-events: none;
     }
 
-    /* テーマカード */
-    @property --border-angle {
-      syntax: '<angle>';
-      initial-value: 0deg;
-      inherits: false;
-    }
-    @keyframes borderSpin {
-      to { --border-angle: 360deg; }
-    }
-    .theme-card {
-      position: relative;
-      border-radius: 22px;
-      margin-bottom: 14px;
-      background: var(--warm-white);
-      padding: 28px 24px 24px;
-      box-shadow: 0 4px 24px rgba(212,168,67,0.15);
-    }
-    .theme-card::before {
-      content: '';
+    /* 花びら粒子 */
+    #particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+    .particle {
       position: absolute;
-      inset: -2px;
-      border-radius: 24px;
-      background: conic-gradient(
-        from var(--border-angle),
-        #a07820 0%,
-        #c8a030 15%,
-        #f0d060 28%,
-        #fff8e0 38%,
-        #ffffff 43%,
-        #fff8e0 48%,
-        #f0d060 58%,
-        #c8a030 72%,
-        #a07820 85%,
-        #c8a030 92%,
-        #a07820 100%
-      );
-      animation: borderSpin 4s linear infinite;
-      z-index: -1;
+      width: 8px; height: 8px;
+      background: rgba(192,57,43,0.18);
+      border-radius: 50% 0 50% 0;
+      animation: sakura var(--d,10s) ease-in-out infinite;
+      animation-delay: var(--delay,0s);
+      transform-origin: center;
     }
-    .theme-card-inner {
+    @keyframes sakura {
+      0%   { transform: translateY(0)      rotate(0deg)   translateX(0);    opacity: 0; }
+      10%  { opacity: 0.7; }
+      90%  { opacity: 0.3; }
+      100% { transform: translateY(100vh)  rotate(720deg) translateX(40px);  opacity: 0; }
+    }
+
+    .container {
+      position: relative; z-index: 1;
+      max-width: 660px;
+      margin: 0 auto;
+      padding: 0 20px 100px;
+    }
+
+    /* ===== ヘッダーライン ===== */
+    .header-line {
+      height: 4px;
+      background: linear-gradient(90deg, var(--vermil), var(--gold), var(--vermil));
+      position: sticky; top: 0; z-index: 100;
+    }
+
+    /* ===== トップ ===== */
+    .torii {
+      text-align: center; padding: 52px 0 0;
+      font-size: 3rem;
+      filter: drop-shadow(0 2px 8px rgba(155,35,53,0.25));
+    }
+    .top { text-align: center; padding: 20px 0 56px; }
+    .top .kana {
+      font-size: 0.75rem; letter-spacing: 0.55em; color: var(--gold);
+      margin-bottom: 16px; text-transform: uppercase;
+    }
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      justify-content: center; margin-bottom: 24px;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; max-width: 72px; height: 1px;
+    }
+    .divider::before { background: linear-gradient(90deg, transparent, var(--gold)); }
+    .divider::after  { background: linear-gradient(90deg, var(--gold), transparent); }
+    .divider span { color: var(--gold); font-size: 0.85rem; }
+
+    .top h1 {
+      font-size: clamp(2.2rem, 6.5vw, 3.4rem);
+      line-height: 1.35;
+      color: var(--ink);
+      letter-spacing: 0.12em;
+      margin-bottom: 8px;
+      position: relative; display: inline-block;
+    }
+    /* 金の下線装飾 */
+    .top h1::after {
+      content: '';
+      display: block; margin: 10px auto 0;
+      width: 60%; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), var(--gold2), var(--gold), transparent);
+    }
+    .top p {
+      font-size: 0.95rem; color: var(--muted);
+      max-width: 480px; margin: 28px auto 40px;
+      line-height: 2;
+    }
+
+    /* ===== ボタン ===== */
+    .btn-gold {
+      display: inline-block; padding: 16px 56px;
+      background: linear-gradient(135deg, var(--vermil) 0%, #b03020 50%, var(--vermil) 100%);
+      background-size: 200% 100%;
+      color: #fff; font-size: 1rem; font-weight: 700;
+      letter-spacing: 0.25em; border: none; border-radius: 2px;
+      cursor: pointer; font-family: inherit;
+      box-shadow: 0 3px 16px rgba(192,57,43,0.35), inset 0 1px 0 rgba(255,255,255,0.15);
+      transition: all 0.3s; animation: shimmer 4s ease infinite; position: relative;
+    }
+    @keyframes shimmer { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+    .btn-gold::before {
+      content: ''; position: absolute; inset: -5px;
+      border: 1px solid rgba(176,125,42,0.5); border-radius: 2px; pointer-events: none;
+    }
+    .btn-gold:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(192,57,43,0.4);
+    }
+    .btn-outline {
+      display: inline-block; padding: 12px 36px;
+      background: transparent;
+      border: 1px solid var(--gold); color: var(--gold);
+      font-size: 0.9rem; letter-spacing: 0.15em; border-radius: 2px;
+      cursor: pointer; font-family: inherit; transition: all 0.2s;
+    }
+    .btn-outline:hover { background: rgba(176,125,42,0.08); }
+
+    /* ===== 診断 ===== */
+    #quizScreen { display: none; }
+    .progress-wrap { margin-bottom: 28px; }
+    .q-count {
+      display: flex; justify-content: space-between;
+      font-size: 0.78rem; color: var(--muted);
+      letter-spacing: 0.15em; margin-bottom: 10px;
+    }
+    .progress-bar {
+      background: var(--washi3); border-radius: 2px;
+      height: 4px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--vermil), var(--gold), var(--gold2));
+      border-radius: 2px;
+      transition: width 0.6s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* 質問カード */
+    .card {
+      background: #fff;
+      border: 1px solid var(--washi3);
+      border-top: 3px solid var(--vermil);
+      border-radius: 2px;
+      padding: 40px 36px;
+      box-shadow: 0 4px 24px var(--shadow), 0 1px 4px rgba(44,24,16,0.06);
       position: relative;
     }
+    /* 隅の装飾 */
+    .card::before, .card::after { position: absolute; font-size: 0.65rem; color: rgba(176,125,42,0.3); }
+    .card::before { content: '✦'; top:12px; right:16px; }
+    .card::after  { content: '✦'; bottom:12px; left:16px; }
 
-    .theme-card-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
+    .q-icon { font-size: 2.6rem; text-align: center; margin-bottom: 16px; }
+    .q-text {
+      font-size: 1.1rem; text-align: center;
+      color: var(--ink); margin-bottom: 32px; line-height: 1.9;
     }
-    .theme-icon { font-size: 32px; line-height: 1; }
-    .btn-refresh {
-      background: rgba(212,168,67,0.08);
-      border: 1px solid rgba(212,168,67,0.22);
-      border-radius: 20px;
-      padding: 6px 14px;
-      font-size: 11px;
-      color: var(--gold);
-      cursor: pointer;
-      font-family: inherit;
-      transition: background 0.2s;
+    .choices { display: flex; flex-direction: column; gap: 10px; }
+    .choice-btn {
+      background: var(--washi);
+      border: 1px solid var(--washi3); border-left: 3px solid transparent;
+      border-radius: 2px; padding: 15px 18px;
+      color: var(--ink2); font-size: 0.92rem; line-height: 1.7;
+      cursor: pointer; text-align: left; font-family: inherit;
+      transition: all 0.22s;
     }
-    .btn-refresh:hover { background: rgba(212,168,67,0.18); }
-
-    .theme-text {
-      font-size: 21px;
-      font-weight: 700;
+    .choice-btn:hover {
+      background: #fff5ee;
+      border-left-color: var(--vermil);
+      border-color: rgba(192,57,43,0.2);
+      border-left-color: var(--vermil);
+      transform: translateX(4px);
       color: var(--ink);
-      line-height: 1.6;
-      margin-bottom: 20px;
-      font-family: 'Hiragino Mincho ProN', serif;
-      letter-spacing: 0.02em;
     }
-    .theme-hint {
-      font-size: 13px;
-      color: var(--mid-ink);
-      line-height: 2;
-      border-top: 1px solid rgba(212,168,67,0.18);
-      padding-top: 16px;
+    .choice-btn.selected {
+      background: #fff5ee;
+      border-color: rgba(192,57,43,0.25);
+      border-left-color: var(--vermil);
+    }
+    .choice-btn:disabled { cursor: default; }
+
+    /* ===== 結果 ===== */
+    #resultScreen { display: none; text-align: center; }
+
+    .result-torii {
+      font-size: 3.8rem; margin-bottom: 8px;
+      animation: float 4s ease-in-out infinite;
+      filter: drop-shadow(0 4px 12px rgba(155,35,53,0.2));
+    }
+    @keyframes float { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-10px) scale(1.03)} }
+
+    .result-label {
+      font-size: 0.75rem; letter-spacing: 0.45em;
+      color: var(--gold); margin-bottom: 8px;
+    }
+    .result-name {
+      font-size: clamp(2.2rem, 7vw, 3.4rem);
+      color: var(--ink);
+      letter-spacing: 0.1em;
+      margin-bottom: 4px; line-height: 1.3;
+      position: relative; display: inline-block;
+    }
+    .result-name::after {
+      content: '';
+      display: block; margin: 8px auto 0;
+      width: 80%; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), var(--gold2), var(--gold), transparent);
+    }
+    .result-sub {
+      font-size: 0.85rem; color: var(--muted);
+      margin: 12px 0 32px; letter-spacing: 0.05em;
     }
 
-    /* カウントダウン */
-    .event-countdown {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(122,171,138,0.1);
-      border: 1px solid rgba(122,171,138,0.3);
-      border-radius: 12px;
-      padding: 12px 16px;
-      margin-bottom: 14px;
-      font-size: 13px;
-      color: var(--sage);
+    .result-card {
+      background: #fff;
+      border: 1px solid var(--washi3);
+      border-top: 3px solid var(--gold);
+      border-radius: 2px;
+      padding: 36px 32px; text-align: left;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 24px var(--shadow);
+      position: relative;
     }
-    .event-countdown .days { font-weight: 800; font-size: 20px; }
-    .event-countdown .name { flex: 1; font-weight: 600; color: var(--ink); }
+    .result-card::after { content: '✦'; position: absolute; bottom:12px; right:16px; font-size:0.65rem; color:rgba(176,125,42,0.25); }
 
-    /* 書くエリア */
-    .write-area {
-      background: var(--warm-white);
-      border: 1px solid rgba(212,168,67,0.2);
-      border-radius: 20px;
-      padding: 20px;
-      margin-bottom: 14px;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.04);
-      transition: border-color 0.2s, box-shadow 0.2s;
+    /* ===== 結果イラスト ===== */
+    .result-image-wrap {
+      margin: 0 auto 28px;
+      width: 180px;
+      filter: drop-shadow(0 6px 18px rgba(44,24,16,0.18));
+      animation: float 4s ease-in-out infinite;
     }
-    .write-area:focus-within {
-      border-color: rgba(212,168,67,0.5);
-      box-shadow: 0 4px 20px rgba(212,168,67,0.1);
+    .result-image-wrap svg { width: 100%; height: auto; border-radius: 10px; }
+
+    .sec-title {
+      font-size: 1rem; letter-spacing: 0.2em; color: var(--gold);
+      margin-bottom: 14px; padding-bottom: 10px;
+      border-bottom: 1px solid var(--washi3);
+      display: flex; align-items: center; gap: 8px;
+      font-weight: 600;
     }
-    .write-area label {
-      font-size: 11px;
-      color: var(--light-ink);
-      display: block;
-      margin-bottom: 12px;
+    .sec-title::before { content: '✦'; font-size: 0.7rem; }
+
+    .result-text {
+      font-size: 0.93rem; line-height: 2.05;
+      color: var(--ink2); margin-bottom: 22px;
+    }
+    .result-text:last-child { margin-bottom: 0; }
+
+    .traits { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .trait-tag {
+      background: #fff8f0;
+      border: 1px solid rgba(176,125,42,0.3);
+      border-radius: 2px; padding: 4px 14px;
+      font-size: 0.8rem; color: var(--gold);
       letter-spacing: 0.05em;
     }
-    textarea {
-      width: 100%;
-      border: none;
-      outline: none;
-      font-size: 15px;
-      line-height: 2;
-      color: var(--ink);
-      resize: none;
-      background: transparent;
-      font-family: 'Hiragino Mincho ProN', serif;
-      min-height: 160px;
+
+    /* ===== SNSシェア ===== */
+    .share-section { margin-top: 32px; text-align: center; }
+    .share-title {
+      font-size: 0.75rem; letter-spacing: 0.35em;
+      color: var(--gold); margin-bottom: 16px;
     }
-    textarea::placeholder { color: #d0c8c0; }
-    .char-count {
-      text-align: right;
-      font-size: 11px;
-      color: var(--light-ink);
-      margin-top: 8px;
+    .share-buttons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+    .share-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 11px 20px; border-radius: 3px;
+      font-size: 0.86rem; font-family: inherit;
+      font-weight: 600; letter-spacing: 0.05em;
+      cursor: pointer; border: none;
+      transition: all 0.2s; text-decoration: none; color: #fff;
+    }
+    .share-btn:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .btn-x    { background: #111; }
+    .btn-line { background: #06c755; }
+    .btn-fb   { background: #1877f2; }
+    .btn-ig   { background: linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888); }
+    .btn-copy {
+      background: #fff; border: 1px solid var(--gold);
+      color: var(--gold);
     }
 
-    /* ボタン */
-    @keyframes btnShimmer {
-      0%   { background-position: 0% 50%; }
-      50%  { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+    /* ===== 区切り ===== */
+    .ornament {
+      display: flex; align-items: center; gap: 12px;
+      margin: 36px 0; color: rgba(176,125,42,0.4); font-size: 0.7rem;
     }
-    .btn-done {
-      width: 100%;
-      padding: 17px;
-      background: linear-gradient(270deg, #f0c060, #e87060, #c070d0, #6090e0, #50c090, #e0a040);
-      background-size: 400% 400%;
-      animation: btnShimmer 4s ease infinite;
-      color: white;
-      border: none;
-      border-radius: 14px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      font-family: inherit;
-      letter-spacing: 0.1em;
-      box-shadow: 0 4px 24px rgba(212,168,67,0.25);
-      transition: transform 0.1s, box-shadow 0.2s;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    .ornament::before, .ornament::after { content: ''; flex: 1; height: 1px; }
+    .ornament::before { background: linear-gradient(90deg, transparent, rgba(176,125,42,0.25)); }
+    .ornament::after  { background: linear-gradient(90deg, rgba(176,125,42,0.25), transparent); }
+
+    /* ===== アニメーション ===== */
+    .fade-in { animation: fadeUp 0.7s cubic-bezier(.4,0,.2,1) forwards; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ===== トースト ===== */
+    #toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+      background: #fff; border: 1px solid var(--gold);
+      color: var(--gold); padding: 10px 28px; border-radius: 2px;
+      font-size: 0.85rem; letter-spacing: 0.1em;
+      z-index: 999; opacity: 0; transition: opacity 0.3s;
+      pointer-events: none;
+      box-shadow: 0 4px 16px var(--shadow);
     }
-    .btn-done:active { transform: scale(0.97); }
-    .btn-done.posted {
-      background: linear-gradient(270deg, #50c090, #60b0d0, #7aab8a, #50c090);
-      background-size: 300% 300%;
-      animation: btnShimmer 3s ease infinite;
-      box-shadow: 0 4px 20px rgba(80,192,144,0.3);
-    }
-    .btn-skip {
-      width: 100%;
-      padding: 13px;
-      background: transparent;
-      color: var(--light-ink);
-      border: none;
-      font-size: 12px;
-      cursor: pointer;
-      margin-top: 8px;
-      font-family: inherit;
+    #toast.show { opacity: 1; }
+
+    footer {
+      text-align: center; padding: 40px 20px 24px;
+      font-size: 0.72rem; color: rgba(74,55,40,0.35);
+      position: relative; z-index: 1;
+      border-top: 1px solid var(--washi3);
     }
 
-    /* フォーム */
-    .section-title {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--light-ink);
-      letter-spacing: 0.2em;
-      margin-bottom: 14px;
-      margin-top: 6px;
+    @media(max-width:480px) {
+      .card, .result-card { padding: 28px 20px; }
+      .btn-gold { padding: 14px 36px; }
     }
-    .add-event-card {
-      background: var(--warm-white);
-      border: 1px solid rgba(212,168,67,0.2);
-      border-radius: 20px;
-      padding: 22px;
-      margin-bottom: 24px;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.04);
-    }
-    .form-group { margin-bottom: 14px; }
-    .form-group label {
-      font-size: 11px;
-      color: var(--light-ink);
-      display: block;
-      margin-bottom: 7px;
-    }
-    .form-group input, .form-group select {
-      width: 100%;
-      padding: 12px 14px;
-      border: 1px solid rgba(212,168,67,0.2);
-      border-radius: 12px;
-      font-size: 14px;
-      color: var(--ink);
-      background: var(--cream);
-      font-family: inherit;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    .form-group input:focus, .form-group select:focus { border-color: var(--gold); }
-    .btn-add {
-      width: 100%;
-      padding: 14px;
-      background: var(--ink);
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      font-family: inherit;
-      transition: background 0.2s;
-    }
-    .btn-add:hover { background: var(--mid-ink); }
-
-    /* イベントリスト */
-    .event-item {
-      background: var(--warm-white);
-      border: 1px solid rgba(212,168,67,0.15);
-      border-radius: 14px;
-      padding: 16px;
-      margin-bottom: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-    }
-    .event-name { font-size: 14px; font-weight: 700; color: var(--ink); }
-    .event-date-txt { font-size: 12px; color: var(--light-ink); margin-top: 4px; }
-    .event-days-left { text-align: right; }
-    .event-days-left .num { font-size: 24px; font-weight: 800; color: var(--gold); }
-    .event-days-left .unit { font-size: 11px; color: var(--light-ink); }
-    .btn-delete { background: none; border: none; color: #d0c0b0; cursor: pointer; font-size: 20px; padding: 4px 4px 4px 12px; }
-
-    /* スケジュール */
-    .next-event-banner {
-      background: linear-gradient(135deg, rgba(212,168,67,0.1), rgba(232,128,106,0.08));
-      border: 1px solid rgba(212,168,67,0.25);
-      border-radius: 14px;
-      padding: 16px;
-      margin-bottom: 24px;
-    }
-    .next-event-banner .label { font-size: 11px; color: var(--light-ink); margin-bottom: 4px; }
-    .next-event-banner .name { font-size: 16px; font-weight: 700; color: var(--ink); }
-    .next-event-banner .days { font-size: 13px; color: var(--gold); margin-top: 4px; font-weight: 600; }
-
-    .schedule-item { display: flex; gap: 14px; margin-bottom: 20px; }
-    .schedule-dot-wrap { display: flex; flex-direction: column; align-items: center; padding-top: 3px; }
-    .schedule-dot {
-      width: 11px; height: 11px; border-radius: 50%;
-      background: var(--gold);
-      flex-shrink: 0;
-      box-shadow: 0 0 6px rgba(212,168,67,0.5);
-    }
-    .schedule-dot.done { background: var(--sage); box-shadow: 0 0 6px rgba(122,171,138,0.5); }
-    .schedule-dot.future { background: #e0d8d0; box-shadow: none; }
-    .schedule-line { width: 1px; flex: 1; background: rgba(212,168,67,0.15); min-height: 36px; margin-top: 4px; }
-    .schedule-content { flex: 1; padding-bottom: 8px; }
-    .schedule-day { font-size: 11px; color: var(--light-ink); margin-bottom: 4px; letter-spacing: 0.05em; }
-    .schedule-theme { font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
-    .schedule-desc { font-size: 12px; color: var(--mid-ink); line-height: 1.7; }
-
-    /* 記録 */
-    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
-    .stat-card {
-      background: var(--warm-white);
-      border: 1px solid rgba(212,168,67,0.2);
-      border-radius: 16px;
-      padding: 20px;
-      text-align: center;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.04);
-    }
-    .stat-num { font-size: 36px; font-weight: 800; color: var(--gold); }
-    .stat-label { font-size: 11px; color: var(--light-ink); margin-top: 4px; }
-
-    .post-log-item {
-      background: var(--warm-white);
-      border: 1px solid rgba(212,168,67,0.12);
-      border-radius: 14px;
-      padding: 15px 16px;
-      margin-bottom: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-    }
-    .post-log-date { font-size: 11px; color: var(--light-ink); margin-bottom: 5px; }
-    .post-log-theme { font-size: 13px; font-weight: 700; color: var(--gold); margin-bottom: 5px; }
-    .post-log-text { font-size: 12px; color: var(--mid-ink); line-height: 1.7; }
-
-    .empty-state { text-align: center; padding: 48px 20px; color: var(--light-ink); font-size: 14px; line-height: 2; }
   </style>
 </head>
 <body>
 
-<canvas id="sparkle"></canvas>
+<div class="header-line"></div>
+<div id="particles"></div>
+<div id="toast">リンクをコピーしました</div>
 
-<nav>
-  <button class="active" onclick="showPage('today', this)">✦ 今日</button>
-  <button onclick="showPage('calendar', this)">◎ イベント</button>
-  <button onclick="showPage('schedule', this)">≋ 流れ</button>
-  <button onclick="showPage('log', this)">◈ 記録</button>
-</nav>
+<div class="container">
 
-<!-- 今日 -->
-<div id="page-today" class="page active">
-  <div class="today-header">
-    <div class="today-date" id="today-date"></div>
-    <div class="deco-line"><span>✦</span></div>
-    <div class="today-eyebrow">TODAY'S THEME</div>
-  </div>
-
-  <div id="event-countdown-area"></div>
-
-  <div class="theme-card">
-    <div class="theme-card-top">
-      <span class="theme-icon" id="theme-icon">🌸</span>
-      <button class="btn-refresh" onclick="refreshTheme()">別のテーマに ↺</button>
+  <!-- トップ -->
+  <div id="topScreen">
+    <div class="torii">⛩</div>
+    <div class="top">
+      <p class="kana">たましいのしんだん</p>
+      <div class="divider"><span>✦ ✦ ✦</span></div>
+      <h1>魂の神様診断</h1>
+      <p>
+        古来より、人の魂にはそれぞれ固有の「神性」が宿るとされてきました。<br>
+        6つの問いに答えるだけで、あなたの魂が共鳴する神様と<br>今世での活かし方が明かされます。
+      </p>
+      <button class="btn-gold" onclick="startQuiz()">御 神 託 を 受 け る</button>
     </div>
-    <div class="theme-text" id="theme-text">まず、イベントを登録しよう</div>
-    <div class="theme-hint" id="theme-hint">「イベント」タブからセッションや講座の日程を追加すると、今日のテーマが現れます。</div>
   </div>
 
-  <div class="write-area">
-    <label>✧ 浮かんだまま、ここに（書けたら）</label>
-    <textarea id="write-text" placeholder="きれいにまとめなくていい。&#10;ぽろっと出てきたものを、そのまま。" oninput="updateCharCount()"></textarea>
-    <div class="char-count"><span id="char-count">0</span> 文字</div>
+  <!-- 診断 -->
+  <div id="quizScreen">
+    <div style="padding-top:48px;">
+      <div class="progress-wrap">
+        <div class="q-count">
+          <span id="qCountText"></span>
+          <span id="qCountNum"></span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+      <div class="card" id="questionCard">
+        <div class="q-icon" id="qIcon"></div>
+        <div class="q-text" id="qText"></div>
+        <div class="choices" id="choices"></div>
+      </div>
+    </div>
   </div>
 
-  <button class="btn-done" id="btn-done" onclick="markPosted()">✓ 投稿した！</button>
-  <button class="btn-skip" onclick="markSkip()">今日はパス　― それでいい ―</button>
+  <!-- 結果 -->
+  <div id="resultScreen">
+    <div style="padding-top:60px;">
+      <div class="result-image-wrap" id="resultImageWrap"></div>
+      <p class="result-label">あなたの魂の神様は</p>
+      <div class="result-name" id="resultName"></div>
+      <div class="result-sub" id="resultSub"></div>
+
+      <div class="result-card fade-in">
+        <div class="sec-title">この神様の本質</div>
+        <div class="result-text" id="resultEssence"></div>
+        <div class="sec-title">あなたの魂の特性</div>
+        <div class="traits" id="resultTraits"></div>
+        <div class="result-text" id="resultTraitDesc"></div>
+        <div class="sec-title">今世での活かし方</div>
+        <div class="result-text" id="resultAdvice"></div>
+      </div>
+
+      <div class="share-section">
+        <div class="share-title">✦ 診断結果をシェアする ✦</div>
+        <div class="share-buttons">
+          <a class="share-btn btn-x"    id="shareX"    href="#" target="_blank" rel="noopener"><span>𝕏</span> X でシェア</a>
+          <a class="share-btn btn-line" id="shareLine" href="#" target="_blank" rel="noopener"><span>💬</span> LINE</a>
+          <a class="share-btn btn-fb"   id="shareFb"   href="#" target="_blank" rel="noopener"><span>f</span> Facebook</a>
+          <button class="share-btn btn-ig" onclick="shareInstagram()"><span>📷</span> Instagram</button>
+          <button class="share-btn btn-copy" onclick="copyLink()"><span>🔗</span> リンクコピー</button>
+        </div>
+      </div>
+
+      <div class="ornament"><span>✦</span></div>
+      <div style="text-align:center;">
+        <button class="btn-outline" onclick="resetQuiz()">もう一度、神託を受ける</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
-<!-- イベント -->
-<div id="page-calendar" class="page">
-  <div class="section-title">イベントを登録する</div>
-  <div class="add-event-card">
-    <div class="form-group">
-      <label>イベント名</label>
-      <input type="text" id="event-name" placeholder="例：スケッチセラピー体験会">
-    </div>
-    <div class="form-group">
-      <label>開催日</label>
-      <input type="date" id="event-date">
-    </div>
-    <div class="form-group">
-      <label>種類</label>
-      <select id="event-type">
-        <option value="session">個人セッション</option>
-        <option value="group">グループ講座</option>
-        <option value="event">体験イベント</option>
-        <option value="other">その他</option>
-      </select>
-    </div>
-    <button class="btn-add" onclick="addEvent()">＋ 登録する</button>
-  </div>
-  <div class="section-title">登録中のイベント</div>
-  <div id="event-list"><div class="empty-state">まだ登録されていません</div></div>
-</div>
+<footer>© 魂の神様診断</footer>
 
-<!-- 流れ -->
-<div id="page-schedule" class="page">
-  <div class="section-title">投稿の流れ</div>
-  <div id="schedule-content"><div class="empty-state">イベントを登録すると<br>ここに流れが表示されます</div></div>
-</div>
+<script>
+/* ===== 12柱 SVGイラスト ===== */
+const godImages = {
+amaterasu:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260"><defs><linearGradient id="a-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fffce8"/><stop offset="100%" stop-color="#f8d858"/></linearGradient></defs><rect width="200" height="260" fill="url(#a-bg)" rx="10"/><g transform="translate(100,92)" stroke="#f0b820" stroke-width="2.2" stroke-linecap="round"><line y1="-54" y2="-68"/><line y1="-54" y2="-68" transform="rotate(30)"/><line y1="-54" y2="-68" transform="rotate(60)"/><line y1="-54" y2="-68" transform="rotate(90)"/><line y1="-54" y2="-68" transform="rotate(120)"/><line y1="-54" y2="-68" transform="rotate(150)"/><line y1="-54" y2="-68" transform="rotate(180)"/><line y1="-54" y2="-68" transform="rotate(210)"/><line y1="-54" y2="-68" transform="rotate(240)"/><line y1="-54" y2="-68" transform="rotate(270)"/><line y1="-54" y2="-68" transform="rotate(300)"/><line y1="-54" y2="-68" transform="rotate(330)"/></g><circle cx="100" cy="92" r="46" fill="#fff9c0" opacity="0.45"/><path d="M56,152 C50,196 47,238 44,260L156,260C153,238 150,196 144,152C132,143 68,143 56,152Z" fill="#f8f4ea"/><path d="M79,153L100,164L121,153" fill="#e8c040" opacity="0.55"/><rect x="71" y="165" width="58" height="13" rx="3" fill="#e8c040" opacity="0.4"/><path d="M56,152C44,158 24,170 17,188C28,192 52,178 64,162Z" fill="#f8f4ea"/><path d="M144,152C156,158 176,170 183,188C172,192 148,178 136,162Z" fill="#f8f4ea"/><rect x="93" y="128" width="14" height="25" rx="7" fill="#f2dfc0"/><ellipse cx="100" cy="106" rx="29" ry="30" fill="#f5e8d0"/><path d="M75,100Q74,74 100,72Q126,74 125,100Q116,79 100,77Q84,79 75,100Z" fill="#2a1a0e"/><ellipse cx="100" cy="71" rx="11" ry="8" fill="#2a1a0e"/><line x1="84" y1="70" x2="116" y2="70" stroke="#f0b820" stroke-width="1.5"/><circle cx="100" cy="70" r="4.5" fill="#f0b820"/><circle cx="88" cy="70" r="2.5" fill="#f0b820" opacity="0.75"/><circle cx="112" cy="70" r="2.5" fill="#f0b820" opacity="0.75"/><path d="M85,106Q91,101 97,106" stroke="#1e0e08" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M103,106Q109,101 115,106" stroke="#1e0e08" stroke-width="2.2" fill="none" stroke-linecap="round"/><ellipse cx="91" cy="105" rx="1.5" ry="1" fill="white" opacity="0.6"/><ellipse cx="110" cy="105" rx="1.5" ry="1" fill="white" opacity="0.6"/><path d="M83,100Q91,97 96,100" stroke="#2a1a0e" stroke-width="1" fill="none"/><path d="M104,100Q109,97 117,100" stroke="#2a1a0e" stroke-width="1" fill="none"/><path d="M94,118Q100,123 106,118" stroke="#c06868" stroke-width="1.5" fill="none" stroke-linecap="round"/><ellipse cx="83" cy="113" rx="7" ry="4" fill="#f0a0a0" opacity="0.2"/><ellipse cx="117" cy="113" rx="7" ry="4" fill="#f0a0a0" opacity="0.2"/><rect x="4" y="4" width="192" height="252" rx="8" fill="none" stroke="#f0b820" stroke-width="1.2" opacity="0.5"/></svg>`,
+tsukuyomi:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260"><defs><linearGradient id="t-bg" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0%" stop-color="#e8ecf8"/><stop offset="100%" stop-color="#7888c8"/></linearGradient></defs><rect width="200" height="260" fill="url(#t-bg)" rx="10"/><circle cx="108" cy="84" r="46" fill="#f0f4ff" opacity="0.65"/><circle cx="120" cy="78" r="38" fill="#7888c8" opacity="0.5"/><circle cx="36" cy="36" r="2" fill="white" opacity="0.8"/><circle cx="164" cy="28" r="1.5" fill="white" opacity="0.7"/><circle cx="170" cy="55" r="1.5" fill="white" opacity="0.6"/><circle cx="28" cy="68" r="1.2" fill="white" opacity="0.65"/><circle cx="155" cy="68" r="1" fill="white" opacity="0.5"/><path d="M56,152C50,196 47,238 44,260L156,260C153,238 150,196 144,152C132,143 68,143 56,152Z" fill="#c4cef0"/><path d="M79,153L100,164L121,153" fill="#6070b0" opacity="0.45"/><rect x="71" y="165" width="58" height="13" rx="3" fill="#6070b0" opacity="0.32"/><path d="M56,152C44,158 24,170 17,190C28,194 52,180 64,164Z" fill="#c4cef0"/><path d="M144,152C156,158 176,170 183,190C172,194 148,180 136,164Z" fill="#c4cef0"/><path d="M56,152C44,158 24,175 17,190C28,194 52,180 64,164Z" fill="#c4cef0"/><rect x="93" y="127" width="14" height="26" rx="7" fill="#e0e4f4"/><ellipse cx="100" cy="105" rx="28" ry="30" fill="#eceaf8"/><path d="M73,100Q72,76 100,72Q128,76 127,100Q119,78 100,76Q81,78 73,100Z" fill="#18183a"/><path d="M73,100Q66,130 65,162" stroke="#18183a" stroke-width="11" fill="none" stroke-linecap="round"/><path d="M127,100Q134,130 135,162" stroke="#18183a" stroke-width="11" fill="none" stroke-linecap="round"/><path d="M94,74Q100,68 106,74" fill="#a0b0e0" stroke="#8090c8" stroke-width="1"/><path d="M86,105Q92,100 98,105" stroke="#18183a" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M102,105Q108,100 114,105" stroke="#18183a" stroke-width="2.2" fill="none" stroke-linecap="round"/><ellipse cx="92" cy="104" rx="1.5" ry="1" fill="white" opacity="0.55"/><ellipse cx="109" cy="104" rx="1.5" ry="1" fill="white" opacity="0.55"/><path d="M83,99Q91,96 96,99" stroke="#18183a" stroke-width="1" fill="none"/><path d="M104,99Q109,96 117,99" stroke="#18183a" stroke-width="1" fill="none"/><path d="M96,117Q100,120 104,117" stroke="#8080a8" stroke-width="1.5" fill="none" stroke-linecap="round"/><rect x="4" y="4" width="192" height="252" rx="8" fill="none" stroke="#90a0d8" stroke-width="1.2" opacity="0.5"/></svg>`,
+susanoo:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260"><defs><linearGradient id="su-bg" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0%" stop-color="#e0e8ff"/><stop offset="100%" stop-color="#3858a0"/></linearGradient></defs><rect width="200" height="260" fill="url(#su-bg)" rx="10"/><path d="M148,28L134,66L146,66L128,108" stroke="#ffd840" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/><path d="M30,55Q60,36 90,55Q60,72 30,55Z" fill="#7090c8" opacity="0.18"/><path d="M30,80Q60,62 90,80Q60,98 30,80Z" fill="#7090c8" opacity="0.14"/><path d="M48,150C40,193 36,235 33,260L167,260C164,235 160,193 152,150C138,141 62,141 48,150Z" fill="#2c4070"/><path d="M74,152L100,164L126,152" fill="#1838a0" opacity="0.55"/><rect x="70" y="165" width="60" height="14" rx="3" fill="#c08020" opacity="0.5"/><path d="M68,152Q100,158 132,152Q130,172 100,174Q70,172 68,152Z" fill="#c08020" opacity="0.28"/><path d="M48,150C34,154 16,164 8,182C20,187 44,174 58,160Z" fill="#2c4070"/><path d="M152,150C166,154 184,164 192,182C180,187 156,174 142,160Z" fill="#2c4070"/><path d="M48,150Q32,144 26,158Q34,168 52,162Z" fill="#c08020" opacity="0.55"/><path d="M152,150Q168,144 174,158Q166,168 148,162Z" fill="#c08020" opacity="0.55"/><rect x="92" y="126" width="16" height="26" rx="8" fill="#d0b890"/><ellipse cx="100" cy="104" rx="30" ry="31" fill="#d0b890"/><path d="M70,99Q70,72 100,68Q130,72 130,99Q120,74 100,72Q80,74 70,99Z" fill="#1a1208"/><path d="M70,99Q62,86 64,112Q67,93 70,99Z" fill="#1a1208"/><path d="M130,99Q138,86 136,112Q133,93 130,99Z" fill="#1a1208"/><path d="M72,90Q60,76 65,64" stroke="#1a1208" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M128,90Q140,76 135,64" stroke="#1a1208" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M86,76Q83,60 87,50" stroke="#1a1208" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M70,97Q100,90 130,97" stroke="#c08020" stroke-width="3" fill="none"/><ellipse cx="89" cy="104" rx="4.5" ry="3" fill="#1a1208"/><ellipse cx="111" cy="104" rx="4.5" ry="3" fill="#1a1208"/><ellipse cx="90" cy="103" rx="1.8" ry="1.2" fill="white" opacity="0.55"/><ellipse cx="112" cy="103" rx="1.8" ry="1.2" fill="white" opacity="0.55"/><line x1="81" y1="97" x2="94" y2="98" stroke="#1a1208" stroke-width="2.5" stroke-linecap="round"/><line x1="106" y1="98" x2="119" y2="97" stroke="#1a1208" stroke-width="2.5" stroke-linecap="round"/><path d="M94,116L106,116" stroke="#9a6050" stroke-width="1.8" fill="none" stroke-linecap="round"/><rect x="4" y="4" width="192" height="252" rx="8" fill="none" stroke="#6888d0" stroke-width="1.2" opacity="0.5"/></svg>`,
+benzaiten:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260"><defs><linearGradient id="bz-bg" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0%" stop-color="#fff5f8"/><stop offset="100%" stop-color="#f0a8c8"/></linearGradient></defs><rect width="200" height="260" fill="url(#bz-bg)" rx="10"/><text x="28" y="50" font-size="18" fill="#e090b0" opacity="0.38">♪</text><text x="154" y="68" font-size="14" fill="#e090b0" opacity="0.32">♩</text><text x="142" y="38" font-size="16" fill="#e090b0" opacity="0.35">♫</text><circle cx="30" cy="225" r="18" fill="#f8d0e0" opacity="0.4"/><circle cx="170" cy="232" r="14" fill="#f8d0e0" opacity="0.35"/><path d="M56,152C50,196 47,238 44,260L156,260C153,238 150,196 144,152C132,143 68,143 56,152Z" fill="#f8e0ea"/><path d="M79,153L100,165L121,153" fill="#e080a8" opacity="0.45"/><rect x="71" y="166" width="58" height="13" rx="3" fill="#e080a8" opacity="0.38"/><path d="M56,152C42,158 20,170 13,190C26,194 50,180 62,164Z" fill="#f8e0ea"/><path d="M144,152C158,158 180,170 187,190C174,194 150,180 138,164Z" fill="#f8e0ea"/><ellipse cx="152" cy="180" rx="14" ry="20" fill="#c8902a" opacity="0.72"/><rect x="150" y="160" width="4" height="28" fill="#a07020" opacity="0.68"/><line x1="146" y1="164" x2="158" y2="164" stroke="#3a2010" stroke-width="1" opacity="0.55"/><line x1="146" y1="172" x2="158" y2="172" stroke="#3a2010" stroke-width="1" opacity="0.55"/><line x1="146" y1="180" x2="158" y2="180" stroke="#3a2010" stroke-width="1" opacity="0.55"/><path d="M136,164Q144,170 148,180" stroke="#f2dfc0" stroke-width="5" fill="none" stroke-linecap="round"/><rect x="93" y="127" width="14" height="25" rx="7" fill="#f2dfc0"/><ellipse cx="100" cy="105" rx="27" ry="29" fill="#f5e8d5"/><path d="M75,101Q74,76 100,73Q126,76 125,101Q116,79 100,77Q84,79 75,101Z" fill="#1e0e08"/><ellipse cx="100" cy="72" rx="13" ry="9" fill="#1e0e08"/><line x1="85" y1="69" x2="115" y2="69" stroke="#f090b0" stroke-width="1.5"/><circle cx="100" cy="68" r="5" fill="#f090b0"/><circle cx="100" cy="68" r="2" fill="white"/><circle cx="89" cy="69" r="3" fill="#f090b0" opacity="0.8"/><circle cx="111" cy="69" r="3" fill="#f090b0" opacity="0.8"/><path d="M85,105Q91,100 97,105Q91,109 85,105Z" fill="#1e0e08"/><path d="M103,105Q109,100 115,105Q109,109 103,105Z" fill="#1e0e08"/><ellipse cx="91" cy="104" rx="1.5" ry="1" fill="white" opacity="0.55"/><ellipse cx="110" cy="104" rx="1.5" ry="1" fill="white" opacity="0.55"/><path d="M82,99Q90,96 96,99" stroke="#3a1a10" stroke-width="1" fill="none"/><path d="M104,99Q110,96 118,99" stroke="#3a1a10" stroke-width="1" fill="none"/><path d="M94,117Q100,123 106,117" stroke="#d06888" stroke-width="1.5" fill="none" stroke-linecap="round"/><ellipse cx="82" cy="112" rx="7" ry="4" fill="#f090a8" opacity="0.2"/><ellipse cx="118" cy="112" rx="7" ry="4" fill="#f090a8" opacity="0.2"/><rect x="4" y="4" width="192" height="252" rx="8" fill="none" stroke="#f090b0" stroke-width="1.2" opacity="0.5"/></svg>`,
+inari:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260"><defs><linearGradient id="in-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff5f0"/><stop offset="100%" stop-color="#f0b090"/></linearGradient></defs><rect width="200" height="260" fill="url(#in-bg)" rx="10"/><rect x="62" y="58" width="6" height="102" fill="#c03828" opacity="0.13"/><rect x="132" y="58" width="6" height="102" fill="#c03828" opacity="0.13"/><rect x="56" y="63" width="90" height="8" rx="3" fill="#c03828" opacity="0.13"/><rect x="60" y="76" width="82" height="6" rx="2" fill="#c03828" opacity="0.1"/><path d="M56,152C50,196 47,238 44,260L156,260C153,238 150,196 144,152C132,143 68,143 56,152Z" fill="white"/><path d="M75,153L100,164L125,153L120,168Q100,172 80,168Z" fill="#c03828" opacity="0.5"/><rect x="71" y="168" width="58" height="13" rx="3" fill="#c03828" opacity="0.28"/><path d="M56,152C43,158 22,172 14,192C26,196 50,182 62,166Z" fill="white"/><path d="M144,152C157,158 178,172 186,192C174,196 150,182 138,166Z" fill="white"/><ellipse cx="154" cy="218" rx="14" ry="10" fill="#e8a060" opacity="0.78"/><ellipse cx="164" cy="210" rx="7" ry="5" fill="#e8a060" opacity="0.78"/><path d="M159,208L163,200L167,208Z" fill="#e8a060" opacity="0.8"/><path d="M169,208L173,201L176,209Z" fill="#e8a060" opacity="0.8"/><circle cx="166" cy="212" r="1.5" fill="#3a2010"/><path d="M138,222Q130,212 132,232Q140,226 154,218" stroke="#e8c090" stroke-width="7" fill="none" stroke-linecap="round" opacity="0.65"/><rect x="93" y="127" width="14" height="26" rx="7" fill="#f0e0c8"/><ellipse cx="100" cy="105" rx="28" ry="30" fill="#f5e8d5"/><path d="M74,101Q74,75 100,73Q126,75 126,101Q117,79 100,77Q83,79 74,101Z" fill="#1e0e08"/><ellipse cx="100" cy="72" rx="12" ry="8" fill="#1e0e08"/><line x1="86" y1="70" x2="114" y2="70" stroke="#c03828" stroke-width="1.5"/><circle cx="100" cy="69" r="4.5" fill="#c03828"/><circle cx="88" cy="70" r="3" fill="#c03828" opacity="0.7"/><circle cx="112" cy="70" r="3" fill="#c03828" opacity="0.7"/><path d="M85,105Q91,100 97,105Q91,109 85,105Z" fill="#1e0e08"/><path d="M103,105Q109,100 115,105Q109,109 103,105Z" fill="#1e0e08"/><ellipse cx="91" cy="104" rx="1.5" ry="1" fill="white" opacity="0.5"/><ellipse cx="110" cy="104" rx="1.5" ry="1" fill="white" opacity="0.5"/><path d="M83,99Q90,96 96,99" stroke="#3a1a10" stroke-width="1" fill="none"/><path d="M104,99Q110,96 118,99" stroke="#3a1a10" stroke-width="1" fill="none"/><path d="M95,117Q100,122 105,117" stroke="#c06870" stroke-width="1.5" fill="none" stroke-linecap="round"/><ellipse cx="83" cy="112" rx="6" ry="3.5" fill="#f0a080" opacity="0.2"/><ellipse cx="117" cy="112" rx="6" ry="3.5" fill="#f0a080" opacity="0.2"/><rect x="4" y="4" width="192" height="252" rx="8" fill="none" stroke="#c03828" stroke-width="1.2" opacity="0.42"/></svg>`,
+daikoku:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260"><defs><linearGradient id="dk-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fffce0"/><stop offset="100%" stop-color="#e8c840"/></linearGradient></defs><rect width="200" height="260" fill="url(#dk-bg)" rx="10"/><ellipse cx="30" cy="244" rx="22" ry="13" fill="#c8a030" opacity="0.18"/><ellipse cx="170" cy="238" rx="18" ry="11" fill="#c8a030" opacity="0.16"/><rect x="118" y="60" width="10" height="42" rx="3" fill="#6a3810" opacity="0.68"/><ellipse cx="123" cy="60" rx="14" ry="10" fill="#3a2010" opacity="0.68"/><ellipse cx="123" cy="102" rx="14" ry="10" fill="#3a2010" opacity="0.68"/><path d="M44,154C37,196 33,237 30,260L170,260C167,237 163,196 156,154C141,143 59,143 44,154Z" fill="#1a1a1a"/><path d="M71,155L100,167L129,155" fill="#c8a030" opacity="0.55"/><rect x="67" y="168" width="66" height="16" rx="4" fill="#c8a030" opacity="0.45"/><ellipse cx="50" cy="200" rx="22" ry="27" fill="#c8a030" opacity="0.72"/><path d="M40,176Q50,168 60,176" stroke="#a08020" stroke-width="2" fill="none"/><circle cx="37" cy="217" r="4" fill="#f0c020" opacity="0.65"/><circle cx="45" cy="224" r="3" fill="#f0c020" opacity="0.58"/><circle cx="30" cy="228" r="3.5" fill="#f0c020" opacity="0.58"/><ellipse cx="100" cy="72" rx="38" ry="12" fill="#1a1a1a"/><rect x="74" y="62" width="52" height="14" rx="4" fill="#1a1a1a"/><ellipse cx="100" cy="62" rx="26" ry="8" fill="#1a1a1a"/><rect x="91" y="130" width="18" height="26" rx="9" fill="#d8b888"/><ellipse cx="100" cy="108" rx="34" ry="32" fill="#d8b888"/><ellipse cx="77" cy="115" rx="12" ry="8" fill="#e09060" opacity="0.28"/><ellipse cx="123" cy="115" rx="12" ry="8" fill="#e09060" opacity="0.28"/><path d="M83,105Q91,99 98,105" stroke="#3a2010" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M102,105Q109,99 117,105" stroke="#3a2010" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M81,98Q91,93 98,98" stroke="#3a2010" stroke-width="1.5" fill="none"/><path d="M102,98Q109,93 119,98" stroke="#3a2010" stroke-width="1.5" fill="none"/><path d="M82,120Q100,133 118,120" stroke="#3a2010" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M130,154Q138,132 128,110" stroke="#1a1a1a" stroke-width="12" fill="none" stroke-linecap="round"/><circle cx="126" cy="108" r="9" fill="#d8b888"/><rect x="4" y="4" width="192" height="252" rx="8" fill="none" stroke="#d4a820" stroke-width="1.2" opacity="0.5"/></svg>`,
+ebisu:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260"><defs><linearGradient id="eb-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e8f8ff"/><stop offset="100%" stop-color="#60a8d0"/></linearGradient></defs><rect width="200" height="260" fill="url(#eb-bg)" rx="10"/><path d="M0,217Q25,207 50,217Q75,227 100,217Q125,207 150,217Q175,227 200,217L200,260L0,260Z" fill="#4090b8" opacity="0.22"/><path d="M0,235Q30,225 60,235Q90,245 120,235Q150,225 200,235L200,260L0,260Z" fill="#2070a0" opacity="0.18"/><line x1="124" y1="80" x2="176" y2="110" stroke="#6a3810" stroke-width="3" stroke-linecap="round"/><line x1="176" y1="110" x2="179" y2="202" stroke="#888" stroke-width="1.5" stroke-dasharray="4,3"/><ellipse cx="173" cy="210" rx="18" ry="10" fill="#e84040" opacity="0.82"/><path d="M155,210Q159,202 163,210Q159,218 155,210Z" fill="#e84040" opacity="0.82"/><circle cx="186" cy="207" r="2.5" fill="#1a1a1a"/><path d="M56,154C48,196 46,238 43,260L157,260C154,238 152,196 144,154C132,143 68,143 56,154Z" fill="#e8d0a0"/><path d="M79,155L100,166L121,155" fill="#c89030" opacity="0.52"/><rect x="71" y="168" width="58" height="14" rx="3" fill="#c89030" opacity="0.38"/><path d="M56,154C43,160 22,173 14,194C26,198 50,184 62,168Z" fill="#e8d0a0"/><path d="M144,154C157,160 178,173 186,194C174,198 150,184 138,168Z" fill="#e8d0a0"/><path d="M70,83Q100,73 130,83Q128,96 100,99Q72,96 70,83Z" fill="#1a1a1a"/><path d="M87,76Q100,60 113,76Q106,81 100,83Q94,81 87,76Z" fill="#1a1a1a"/><rect x="93" y="129" width="14" height="26" rx="7" fill="#d8b888"/><ellipse cx="100" cy="109" rx="31" ry="30" fill="#d8b888"/><ellipse cx="78" cy="116" rx="11" ry="7" fill="#e09060" opacity="0.26"/><ellipse cx="122" cy="116" rx="11" ry="7" fill="#e09060" opacity="0.26"/><path d="M84,107Q91,101 97,107" stroke="#3a2010" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M103,107Q110,101 116,107" stroke="#3a2010" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M82,101Q91,96 97,101" stroke="#3a2010" stroke-width="1.2" fill="none"/><path d="M103,101Q110,96 118,101" stroke="#3a2010" stroke-width="1.2" fill="none"/><path d="M83,121Q100,134 117,121" stroke="#3a2010" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M130,154Q132,132 128,113" stroke="#e8d0a0" stroke-width="10" fill="none" stroke-linecap="round"/><circle cx="126" cy="111" r="8" fill="#d8b888"/><rect x="4" y="4" width="192" height="252" rx="8" fill="none" stroke="#60a8d0" stroke-width="1.2" opacity="0.5"/></svg>`,
+bishamonten:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260"><defs><linearGradient id="bi-bg" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0%" stop-color="#3a2010"/><stop offset="100%" stop-color="#8a2010"/></linearGradient><linearGradient id="bi-gld" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#d4a820"/><stop offset="100%" stop-color="#a07818"/></linearGradient></defs><rect width="200" height="260" fill="url(#bi-bg)" rx="10"/><rect x="148" y="140" width="24" height="4" rx="1" fill="#d4a820" opacity="0.58"/><rect x="150" y="144" width="20" height="18" rx="1" fill="#8a6018" opacity="0.38"/><rect x="146" y="158" width="28" height="4" rx="1" fill="#d4a820" opacity="0.48"/><rect x="148" y="162" width="24" height="16" rx="1" fill="#8a6018" opacity="0.32"/><rect x="144" y="174" width="32" height="4" rx="1" fill="#d4a820" opacity="0.42"/><rect x="150" y="178" width="20" height="10" rx="1" fill="#8a6018" opacity="0.28"/><path d="M47,152C40,194 36,235 33,260L167,260C164,235 160,194 153,152C139,142 61,142 47,152Z" fill="#3a2010"/><path d="M67,152Q100,160 133,152Q131,172 100,176Q69,172 67,152Z" fill="url(#bi-gld)" opacity="0.65"/><rect x="77" y="176" width="46" height="13" rx="2" fill="#d4a820" opacity="0.48"/><path d="M78,189L84,189L84,204L78,204Z" fill="#d4a820" opacity="0.38"/><path d="M89,189L95,189L95,204L89,204Z" fill="#d4a820" opacity="0.38"/><path d="M105,189L111,189L111,204L105,204Z" fill="#d4a820" opacity="0.38"/><path d="M116,189L122,189L122,204L116,204Z" fill="#d4a820" opacity="0.38"/><path d="M47,152Q30,146 24,160Q33,170 52,163Z" fill="url(#bi-gld)" opacity="0.65"/><path d="M153,152Q170,146 176,160Q167,170 148,163Z" fill="url(#bi-gld)" opacity="0.65"/><line x1="30" y1="58" x2="42" y2="242" stroke="#d4a820" stroke-width="3" stroke-linecap="round" opacity="0.68"/><path d="M24,60L36,40L42,60Z" fill="#d4a820" opacity="0.78"/><rect x="87" y="128" width="26" height="25" rx="4" fill="#d4a820" opacity="0.45"/><ellipse cx="100" cy="107" rx="29" ry="29" fill="#c8a878"/><path d="M71,105Q71,72 100,70Q129,72 129,105Q120,80 100,78Q80,80 71,105Z" fill="#2a1808"/><path d="M71,105Q100,96 129,105" stroke="#d4a820" stroke-width="2" fill="none"/><path d="M100,70L100,52Q108,58 112,68" stroke="#d4a820" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse cx="89" cy="105" rx="5" ry="3.2" fill="#1a0808"/><ellipse cx="111" cy="105" rx="5" ry="3.2" fill="#1a0808"/><ellipse cx="90" cy="104" rx="2" ry="1.2" fill="#e04820" opacity="0.55"/><ellipse cx="112" cy="104" rx="2" ry="1.2" fill="#e04820" opacity="0.55"/><path d="M81,98L94,101" stroke="#1a0808" stroke-width="3" stroke-linecap="round"/><path d="M106,101L119,98" stroke="#1a0808" stroke-width="3" stroke-linecap="round"/><path d="M93,118L107,118" stroke="#a06050" stroke-width="2" stroke-linecap="round"/><rect x="4" y="4" width="192" height="252" rx="8" fill="none" stroke="#d4a820" stroke-width="1.5" opacity="0.58"/></svg>`,
+okuninushi:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260"><defs><linearGradient id="ok-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f0f8e8"/><stop offset="100%" stop-color="#88b858"/></linearGradient></defs><rect width="200" height="260" fill="url(#ok-bg)" rx="10"/><circle cx="28" cy="38" r="16" fill="#70a840" opacity="0.13"/><circle cx="172" cy="42" r="14" fill="#70a840" opacity="0.1"/><path d="M14,62Q28,50 36,64Q24,70 14,62Z" fill="#70a840" opacity="0.16"/><path d="M164,57Q178,45 186,59Q174,65 164,57Z" fill="#70a840" opacity="0.13"/><line x1="148" y1="70" x2="144" y2="257" stroke="#6a3810" stroke-width="5" stroke-linecap="round" opacity="0.72"/><path d="M148,90Q158,82 162,92Q154,98 148,90Z" fill="#70a840" opacity="0.62"/><path d="M147,112Q157,104 161,114Q153,120 147,112Z" fill="#70a840" opacity="0.52"/><path d="M56,154C50,197 47,238 44,260L156,260C153,238 150,197 144,154C132,143 68,143 56,154Z" fill="#c8b078"/><path d="M79,155L100,166L121,155" fill="#8a6030" opacity="0.48"/><rect x="71" y="167" width="58" height="14" rx="3" fill="#8a6030" opacity="0.38"/><path d="M84,156Q100,163 116,156L112,190Q100,194 88,190Z" fill="#f0ece0" opacity="0.48"/><path d="M56,154C43,160 22,174 14,196C26,200 50,186 62,170Z" fill="#c8b078"/><path d="M144,154C157,160 178,174 186,196C174,200 150,186 138,170Z" fill="#c8b078"/><ellipse cx="62" cy="242" rx="16" ry="11" fill="white" opacity="0.82"/><ellipse cx="70" cy="230" rx="8" ry="6" fill="white" opacity="0.82"/><path d="M66,228L63,215L68,227Z" fill="white" opacity="0.82"/><path d="M72,227L74,214L76,226Z" fill="white" opacity="0.82"/><circle cx="73" cy="233" r="1.8" fill="#e05060"/><rect x="93" y="129" width="14" height="26" rx="7" fill="#d8b888"/><ellipse cx="100" cy="107" rx="29" ry="30" fill="#d8b888"/><path d="M73,103Q72,77 100,73Q128,77 127,103Q118,79 100,77Q82,79 73,103Z" fill="#1e0e08"/><path d="M93,73Q100,56 107,73Q103,69 100,67Q97,69 93,73Z" fill="#1e0e08"/><ellipse cx="100" cy="67" rx="7" ry="9" fill="#1e0e08"/><path d="M88,74L112,74" stroke="#c89030" stroke-width="2"/><ellipse cx="100" cy="74" rx="12" ry="4" fill="none" stroke="#c89030" stroke-width="1.5"/><path d="M85,107Q92,102 98,107" stroke="#1e0e08" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M102,107Q108,102 115,107" stroke="#1e0e08" stroke-width="2.2" fill="none" stroke-linecap="round"/><ellipse cx="91" cy="106" rx="1.5" ry="1" fill="white" opacity="0.5"/><ellipse cx="109" cy="106" rx="1.5" ry="1" fill="white" opacity="0.5"/><path d="M83,101Q91,98 97,101" stroke="#1e0e08" stroke-width="1.2" fill="none"/><path d="M103,101Q109,98 117,101" stroke="#1e0e08" stroke-width="1.2" fill="none"/><path d="M94,119Q100,125 106,119" stroke="#b06870" stroke-width="1.5" fill="none" stroke-linecap="round"/><ellipse cx="83" cy="113" rx="7" ry="4" fill="#d09060" opacity="0.18"/><ellipse cx="117" cy="113" rx="7" ry="4" fill="#d09060" opacity="0.18"/><rect x="4" y="4" width="192" height="252" rx="8" fill="none" stroke="#88b858" stroke-width="1.2" opacity="0.5"/></svg>`,
+konohana:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260"><defs><linearGradient id="kn-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff8fc"/><stop offset="100%" stop-color="#f8c0d8"/></linearGradient></defs><rect width="200" height="260" fill="url(#kn-bg)" rx="10"/><path d="M30,44Q35,37 41,42Q37,49 30,44Z" fill="#f8a0c0" opacity="0.68" transform="rotate(15,35,43)"/><path d="M156,30Q161,23 167,28Q163,35 156,30Z" fill="#f8a0c0" opacity="0.62" transform="rotate(-20,161,29)"/><path d="M171,82Q176,75 182,80Q178,87 171,82Z" fill="#f8a0c0" opacity="0.58" transform="rotate(10,176,81)"/><path d="M20,122Q25,115 31,120Q27,127 20,122Z" fill="#f8a0c0" opacity="0.52" transform="rotate(-10,25,121)"/><path d="M146,57Q151,50 157,55Q153,62 146,57Z" fill="#f8a0c0" opacity="0.58" transform="rotate(25,151,56)"/><path d="M60,30Q65,23 71,28Q67,35 60,30Z" fill="#f8a0c0" opacity="0.48" transform="rotate(-15,65,29)"/><path d="M56,152C49,195 47,237 44,260L156,260C153,237 151,195 144,152C132,142 68,142 56,152Z" fill="#f8e0f0"/><path d="M78,154L100,165L122,154L118,179Q100,184 82,179Z" fill="#e070a8" opacity="0.42"/><rect x="70" y="179" width="60" height="18" rx="3" fill="#c04880" opacity="0.38"/><rect x="78" y="184" width="44" height="8" rx="2" fill="#f8d0e8" opacity="0.38"/><path d="M56,152C40,160 15,174 7,200C22,206 50,188 62,170Z" fill="#f8e0f0"/><path d="M144,152C160,160 185,174 193,200C178,206 150,188 138,170Z" fill="#f8e0f0"/><path d="M140,130Q156,117 166,102" stroke="#8a5028" stroke-width="2.5" fill="none" stroke-linecap="round"/><circle cx="166" cy="102" r="7" fill="#f8b0c8" opacity="0.78"/><circle cx="157" cy="114" r="6" fill="#f8b0c8" opacity="0.72"/><circle cx="149" cy="124" r="5" fill="#f8b0c8" opacity="0.68"/><rect x="93" y="127" width="14" height="26" rx="7" fill="#f2dfc0"/><ellipse cx="100" cy="105" rx="27" ry="29" fill="#f5e8d5"/><path d="M75,101Q74,76 100,73Q126,76 125,101Q116,79 100,77Q84,79 75,101Z" fill="#1e0e08"/><ellipse cx="100" cy="72" rx="14" ry="10" fill="#1e0e08"/><line x1="82" y1="69" x2="118" y2="69" stroke="#c04880" stroke-width="1.5"/><circle cx="84" cy="69" r="4" fill="#f8a0c0"/><circle cx="84" cy="69" r="2" fill="white"/><circle cx="100" cy="67" r="5" fill="#f8a0c0"/><circle cx="100" cy="67" r="2.5" fill="white"/><circle cx="116" cy="69" r="4" fill="#f8a0c0"/><circle cx="116" cy="69" r="2" fill="white"/><path d="M84,105Q91,99 97,105Q91,109 84,105Z" fill="#1e0e08"/><path d="M103,105Q110,99 116,105Q110,109 103,105Z" fill="#1e0e08"/><ellipse cx="90" cy="104" rx="1.8" ry="1.2" fill="white" opacity="0.52"/><ellipse cx="110" cy="104" rx="1.8" ry="1.2" fill="white" opacity="0.52"/><path d="M82,99Q90,95 96,99" stroke="#3a1a10" stroke-width="1" fill="none"/><path d="M104,99Q110,95 118,99" stroke="#3a1a10" stroke-width="1" fill="none"/><path d="M94,117Q100,123 106,117" stroke="#d06888" stroke-width="1.5" fill="none" stroke-linecap="round"/><ellipse cx="83" cy="112" rx="7" ry="4" fill="#f090b0" opacity="0.2"/><ellipse cx="117" cy="112" rx="7" ry="4" fill="#f090b0" opacity="0.2"/><rect x="4" y="4" width="192" height="252" rx="8" fill="none" stroke="#f090b0" stroke-width="1.2" opacity="0.5"/></svg>`,
+seoritsu:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260"><defs><linearGradient id="sr-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f0fafe"/><stop offset="100%" stop-color="#70c8f0"/></linearGradient></defs><rect width="200" height="260" fill="url(#sr-bg)" rx="10"/><ellipse cx="100" cy="242" rx="90" ry="18" fill="#60b8e0" opacity="0.13"/><path d="M10,182Q40,167 70,187Q100,202 130,182Q160,167 190,182" stroke="#80d0f0" stroke-width="2" fill="none" opacity="0.38"/><path d="M10,202Q45,190 75,207Q105,220 135,202Q162,188 190,202" stroke="#60b8e0" stroke-width="2" fill="none" opacity="0.28"/><path d="M52,152C44,196 40,237 37,260L163,260C160,237 156,196 148,152C136,141 64,141 52,152Z" fill="#c8eef8"/><path d="M76,155L100,165L124,155" fill="#80c0e0" opacity="0.32"/><rect x="70" y="166" width="60" height="13" rx="3" fill="#60a8d0" opacity="0.28"/><path d="M52,152C36,160 11,177 4,202C18,207 46,190 60,170Z" fill="#c8eef8"/><path d="M148,152C164,160 189,177 196,202C182,207 154,190 140,170Z" fill="#c8eef8"/><path d="M4,202Q14,218 11,242" stroke="#80d0f0" stroke-width="2" fill="none" opacity="0.45"/><path d="M196,202Q186,218 189,242" stroke="#80d0f0" stroke-width="2" fill="none" opacity="0.45"/><rect x="93" y="127" width="14" height="26" rx="7" fill="#e8f4f8"/><ellipse cx="100" cy="105" rx="27" ry="28" fill="#eef5f8"/><path d="M75,101Q74,77 100,73Q126,77 125,101Q116,79 100,77Q84,79 75,101Z" fill="#2a3858"/><path d="M75,101Q66,132 64,167" stroke="#2a3858" stroke-width="11" fill="none" stroke-linecap="round"/><path d="M125,101Q134,132 136,167" stroke="#2a3858" stroke-width="11" fill="none" stroke-linecap="round"/><circle cx="100" cy="73" r="6" fill="#80c8e8" opacity="0.78"/><circle cx="100" cy="73" r="3" fill="white" opacity="0.58"/><line x1="88" y1="74" x2="112" y2="74" stroke="#80c8e8" stroke-width="1.2" opacity="0.68"/><path d="M85,105Q92,100 98,105" stroke="#2a3858" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M102,105Q108,100 115,105" stroke="#2a3858" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="91" cy="104" rx="1.5" ry="1" fill="white" opacity="0.58"/><ellipse cx="109" cy="104" rx="1.5" ry="1" fill="white" opacity="0.58"/><path d="M83,99Q91,96 97,99" stroke="#2a3858" stroke-width="1" fill="none"/><path d="M103,99Q109,96 117,99" stroke="#2a3858" stroke-width="1" fill="none"/><path d="M95,117Q100,121 105,117" stroke="#6890b0" stroke-width="1.5" fill="none" stroke-linecap="round"/><ellipse cx="83" cy="111" rx="7" ry="4" fill="#80c8e8" opacity="0.16"/><ellipse cx="117" cy="111" rx="7" ry="4" fill="#80c8e8" opacity="0.16"/><rect x="4" y="4" width="192" height="252" rx="8" fill="none" stroke="#70c0e8" stroke-width="1.2" opacity="0.5"/></svg>`,
+kukuri:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260"><defs><linearGradient id="ku-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f8f0ff"/><stop offset="100%" stop-color="#b090d8"/></linearGradient></defs><rect width="200" height="260" fill="url(#ku-bg)" rx="10"/><path d="M32,42Q40,34 48,42Q40,50 32,42" fill="none" stroke="#9070b8" stroke-width="1.5" opacity="0.28"/><path d="M32,42Q44,30 56,42Q44,54 32,42" fill="none" stroke="#9070b8" stroke-width="1" opacity="0.18"/><path d="M148,222Q156,214 164,222Q156,230 148,222" fill="none" stroke="#9070b8" stroke-width="1.5" opacity="0.22"/><path d="M165,50Q173,42 181,50Q173,58 165,50" fill="none" stroke="#9070b8" stroke-width="1.5" opacity="0.18"/><ellipse cx="40" cy="142" rx="28" ry="18" fill="#c0a0e0" opacity="0.08"/><ellipse cx="165" cy="132" rx="26" ry="16" fill="#c0a0e0" opacity="0.07"/><path d="M54,152C47,196 44,237 41,260L159,260C156,237 153,196 146,152C134,141 66,141 54,152Z" fill="#f0e8f8"/><path d="M76,154L100,165L124,154" fill="#9070b8" opacity="0.28"/><rect x="72" y="167" width="56" height="13" rx="3" fill="#9070b8" opacity="0.22"/><path d="M74,162Q100,168 126,162" stroke="#9070b8" stroke-width="1.5" fill="none" opacity="0.35"/><path d="M72,177Q100,183 128,177" stroke="#9070b8" stroke-width="1" fill="none" opacity="0.25"/><path d="M54,152C41,160 17,174 9,200C24,204 50,188 62,168Z" fill="#f0e8f8"/><path d="M146,152C159,160 183,174 191,200C176,204 150,188 138,168Z" fill="#f0e8f8"/><rect x="93" y="127" width="14" height="26" rx="7" fill="#ede0f0"/><ellipse cx="100" cy="105" rx="27" ry="28" fill="#ede0f0"/><path d="M75,101Q74,77 100,73Q126,77 125,101Q117,79 100,77Q83,79 75,101Z" fill="#4a3868"/><path d="M75,101Q70,130 68,160" stroke="#4a3868" stroke-width="10" fill="none" stroke-linecap="round"/><path d="M125,101Q130,130 132,160" stroke="#4a3868" stroke-width="10" fill="none" stroke-linecap="round"/><path d="M88,79Q100,75 112,79Q100,77 88,79Z" fill="#c0a8e0" opacity="0.45"/><circle cx="100" cy="72" r="6" fill="none" stroke="#9060c0" stroke-width="1.5"/><circle cx="100" cy="72" r="3" fill="#9060c0" opacity="0.58"/><line x1="88" y1="73" x2="112" y2="73" stroke="#9060c0" stroke-width="1.2" opacity="0.65"/><path d="M84,104Q91,99 97,104" stroke="#4a3868" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M103,104Q109,99 116,104" stroke="#4a3868" stroke-width="2.2" fill="none" stroke-linecap="round"/><ellipse cx="90" cy="103" rx="1.5" ry="1" fill="white" opacity="0.58"/><ellipse cx="110" cy="103" rx="1.5" ry="1" fill="white" opacity="0.58"/><path d="M82,98Q90,94 96,98" stroke="#4a3868" stroke-width="1" fill="none"/><path d="M104,98Q110,94 118,98" stroke="#4a3868" stroke-width="1" fill="none"/><path d="M96,117Q100,120 104,117" stroke="#8060a8" stroke-width="1.5" fill="none" stroke-linecap="round"/><ellipse cx="83" cy="111" rx="6" ry="3.5" fill="#c090d8" opacity="0.13"/><ellipse cx="117" cy="111" rx="6" ry="3.5" fill="#c090d8" opacity="0.13"/><rect x="4" y="4" width="192" height="252" rx="8" fill="none" stroke="#9070c0" stroke-width="1.2" opacity="0.5"/></svg>`
+};
 
-<!-- 記録 -->
-<div id="page-log" class="page">
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-num" id="stat-posted">0</div>
-      <div class="stat-label">投稿した日</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num" id="stat-streak">0</div>
-      <div class="stat-label">連続日数</div>
-    </div>
-  </div>
-  <div class="section-title">投稿の記録</div>
-  <div id="post-log"><div class="empty-state">投稿した記録が<br>ここに積み重なっていきます</div></div>
-</div>
-
-<script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, doc, onSnapshot, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-
-// ===== Firebase初期化 =====
-const app = initializeApp({
-  apiKey: "AIzaSyBFg7hKeerfd4_dYx-qMLrLWMo8H_glFXE",
-  authDomain: "event-funnel.firebaseapp.com",
-  projectId: "event-funnel",
-  storageBucket: "event-funnel.firebasestorage.app",
-  messagingSenderId: "493083310454",
-  appId: "1:493083310454:web:2360894489ff4466076257"
-});
-const db = getFirestore(app);
-const docRef = doc(db, 'appdata', 'main');
-
-// ===== キラキラアニメーション =====
-(function() {
-  const canvas = document.getElementById('sparkle');
-  const ctx = canvas.getContext('2d');
-  let W, H, particles = [];
-  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
-  resize();
-  window.addEventListener('resize', resize);
-  const colors = ['#f0d080','#e8e0c8','#d4a843','#ffffff','#c8c0b0','#f8f0d8','#b8a878'];
-  function createParticle() {
-    return { x: Math.random()*W, y: Math.random()*H, r: Math.random()*3+1, alpha: Math.random()*0.6+0.3,
-      color: colors[Math.floor(Math.random()*colors.length)], speed: Math.random()*0.4+0.15,
-      drift: (Math.random()-0.5)*0.4, twinkle: Math.random()*Math.PI*2, twinkleSpeed: Math.random()*0.04+0.015 };
+/* ===== 桜の花びら ===== */
+(function(){
+  const w = document.getElementById('particles');
+  for(let i=0;i<28;i++){
+    const el=document.createElement('div'); el.className='particle';
+    const s=Math.random()*7+5;
+    el.style.cssText=`width:${s}px;height:${s}px;left:${Math.random()*100}%;top:-${Math.random()*20}%;--d:${(Math.random()*12+8).toFixed(1)}s;--delay:-${(Math.random()*12).toFixed(1)}s;opacity:0;`;
+    w.appendChild(el);
   }
-  for (let i = 0; i < 40; i++) particles.push(createParticle());
-  function draw() {
-    ctx.clearRect(0,0,W,H);
-    particles.forEach(p => {
-      p.twinkle += p.twinkleSpeed;
-      const a = p.alpha * (0.4 + 0.6 * Math.sin(p.twinkle));
-      ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = p.color;
-      ctx.shadowColor = p.color; ctx.shadowBlur = 10;
-      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill(); ctx.restore();
-      p.y -= p.speed; p.x += p.drift;
-      if (p.y < -10) Object.assign(p, createParticle(), { y: H+10 });
-    });
-    requestAnimationFrame(draw);
-  }
-  draw();
 })();
 
-// ===== データ =====
-let events = [];
-let postLog = [];
-let todayStatus = {};
-let saveTimer = null;
+/* ===== 質問（6問） ===== */
+const questions = [
+  {
+    icon: '☀️',
+    text: 'このことを考えると、なんだかワクワクしたり嬉しくなる、と感じることは？',
+    choices: [
+      { text: '誰かに「あなたのおかげで道が見えた」と言ってもらえること',   score: { amaterasu:3, bishamonten:1 } },
+      { text: 'ひとりで静かに、物事の本質や宇宙の不思議を深く考えること',   score: { tsukuyomi:3, seoritsu:1 } },
+      { text: 'まわりの人みんなが笑顔で、豊かさを分かち合っている光景',     score: { daikoku:3, ebisu:1 } },
+      { text: '流れが変わる瞬間を感じて、新しいことに飛び込むこと',         score: { inari:3, susanoo:1 } },
+    ]
+  },
+  {
+    icon: '🌸',
+    text: '友人や知人から「あなたって、こういうとき頼りになるな」と言われそうなのは？',
+    choices: [
+      { text: '迷っているとき背中を押してくれる、方向を示してくれる',       score: { amaterasu:2, bishamonten:2 } },
+      { text: '話をじっくり聴いてくれる、本質をズバリ言ってくれる',         score: { tsukuyomi:2, kukuri:2 } },
+      { text: '場を華やかにしてくれる、センスが光るものを見せてくれる',     score: { benzaiten:3, konohana:1 } },
+      { text: '人と人をつないでくれる、ご縁を運んできてくれる',             score: { inari:2, okuninushi:2 } },
+    ]
+  },
+  {
+    icon: '🌙',
+    text: '「ああ、ここにいると落ち着くな」とほっとするのは、どんな場面や場所？',
+    choices: [
+      { text: '人がたくさん集まる、明るくて賑やかな場所',                   score: { amaterasu:2, ebisu:2 } },
+      { text: '夜、ひとりで月を眺めながら静かに過ごす時間',                 score: { tsukuyomi:3, seoritsu:1 } },
+      { text: '花が咲いていたり、緑が豊かな自然のなか',                     score: { konohana:3, benzaiten:1 } },
+      { text: '何かが大きく動いている、変化の真っ只中',                     score: { susanoo:2, daikoku:2 } },
+    ]
+  },
+  {
+    icon: '🍃',
+    text: '何か壁にぶつかったとき、あなたが自然とやってしまうことは？',
+    choices: [
+      { text: '「よし、やってやる！」と前に出て、力でぶつかっていく',       score: { bishamonten:3, susanoo:2 } },
+      { text: 'まずは全体を見渡して、みんなが納得できる落としどころを探す', score: { kukuri:3, okuninushi:1 } },
+      { text: '無理に抗わず、水が流れるようにするりと方向を変える',         score: { seoritsu:3, inari:1 } },
+      { text: '仲間を集めて、みんなで笑いながら乗り越えようとする',         score: { ebisu:3, daikoku:1 } },
+    ]
+  },
+  {
+    icon: '🔮',
+    text: '「これができたら、この世に生まれてきた意味があるな」と思えそうなことは？',
+    choices: [
+      { text: '光をもって先頭に立ち、誰かの人生を照らしてあげること',       score: { amaterasu:3, bishamonten:1 } },
+      { text: '心から美しいと思えるものを創り、世界に残すこと',             score: { benzaiten:2, konohana:2 } },
+      { text: '人と人のご縁を丁寧につなぎ、みんなが栄えること',             score: { okuninushi:3, inari:1 } },
+      { text: '淀んだものを清め、新しくてきれいな流れを生み出すこと',       score: { seoritsu:3, tsukuyomi:1 } },
+    ]
+  },
+  {
+    icon: '✨',
+    text: '「あ、これって幸せだな」とじんわり感じる瞬間は？',
+    choices: [
+      { text: 'まわりの人みんなが豊かで、笑顔があふれているとき',           score: { daikoku:3, ebisu:1 } },
+      { text: '音楽・絵・言葉など、自分の表現が誰かの心に届いたとき',       score: { benzaiten:3, konohana:1 } },
+      { text: '自分の関わりで、誰かの人生がぱっと明るく変わったとき',       score: { okuninushi:2, bishamonten:2 } },
+      { text: '「来た！このタイミングだ」と感じて、すっと動けたとき',       score: { inari:3, susanoo:1 } },
+    ]
+  },
+];
 
-async function loadData() {
-  const snap = await getDoc(docRef);
-  if (snap.exists()) {
-    const d = snap.data();
-    events = d.events || [];
-    postLog = d.postLog || [];
-    todayStatus = d.todayStatus || {};
-  }
-  renderToday();
-  // リアルタイム同期
-  onSnapshot(docRef, snap => {
-    if (snap.exists()) {
-      const d = snap.data();
-      events = d.events || [];
-      postLog = d.postLog || [];
-      todayStatus = d.todayStatus || {};
-      const activePage = document.querySelector('.page.active')?.id?.replace('page-','');
-      if (activePage === 'today') renderToday();
-      if (activePage === 'calendar') renderEventList();
-      if (activePage === 'schedule') renderSchedule();
-      if (activePage === 'log') renderLog();
-    }
+/* ===== 12柱の神様データ ===== */
+const gods = {
+  amaterasu: {
+    icon: '☀️', name: '天照大御神', sub: 'Amaterasu — 太陽と光の女神',
+    essence: '天照大御神は、太陽のように万物に光を注ぐ最高神。混沌の中でも揺るがない「中心」となり、周囲を自然と引き寄せる力を持ちます。暗い時代にも希望の光をともし続ける、強さと慈愛を兼ね備えた魂です。',
+    traits: ['リーダーシップ', '高い使命感', '包容力', '情熱', '明朗さ'],
+    traitDesc: 'あなたの魂は「太陽型」。自分が輝くことで他者を照らすタイプです。無意識のうちに場の中心になり、人々が自然と集まってきます。',
+    advice: '今世のあなたは「光の中心」になることが使命です。表舞台に出ることをためらわず、ビジョンを堂々と語ってください。コミュニティや組織を動かすリーダーとして活躍するとき、魂が最も喜びます。'
+  },
+  tsukuyomi: {
+    icon: '🌕', name: '月読命', sub: 'Tsukuyomi — 月と深層意識の神',
+    essence: '月読命は、夜の世界と内なる真実を司る神。見えないものを見通し、時間の流れと潮の満ち引きを知る、深淵な知恵の持ち主。喧騒から離れた場所でこそ本領を発揮します。',
+    traits: ['深い洞察力', '内省', '神秘への親和性', '静けさ', '周期的な知恵'],
+    traitDesc: 'あなたの魂は「月型」。表には出にくいけれど、内側に壮大な世界を持っています。他者の本質を見抜く力があり、深夜や月明かりの下で最もインスピレーションが湧くタイプです。',
+    advice: '今世のあなたは「見えない真実」を世に伝える役割があります。ブログ、書物、カウンセリング、占いなど、「静かに深く届ける」媒体があなたに合っています。月のリズムに合わせて活動するだけで流れが変わります。'
+  },
+  susanoo: {
+    icon: '⚡', name: '素戔嗚尊', sub: 'Susanoo — 嵐と変革の神',
+    essence: '素戔嗚尊は、嵐と海を司る破壊と創造の神。常識を打ち破り、古い構造を壊して新しい世界を切り拓く、圧倒的なエネルギーの持ち主。困難に立ち向かう英雄の魂です。',
+    traits: ['変革力', '勇敢さ', '情熱', '独立心', '守護の力'],
+    traitDesc: 'あなたの魂は「嵐型」。場の空気を一変させるほどのエネルギーを持ちます。ルールへの反発心は、より良い世界を作りたいという魂の叫びです。',
+    advice: '今世のあなたは「古い常識を壊す開拓者」です。人と違う道を行くことを恐れないでください。起業・革新的プロジェクト・社会変革など、既存の枠をぶち壊す場所で最も輝きます。'
+  },
+  benzaiten: {
+    icon: '🎶', name: '弁財天', sub: 'Benzaiten — 音楽・芸術・豊穣の女神',
+    essence: '弁財天は、音楽・言葉・美・知恵・水を司る女神。あらゆる「流れるもの」を美しく調和させる力を持ちます。才能と美しさで人を惹きつけ、芸術を通じて世界を豊かにする魂です。',
+    traits: ['芸術的感性', '表現力', '美意識', '知性', '繁栄を呼ぶ力'],
+    traitDesc: 'あなたの魂は「芸術家型」。美しさや調和を感じ取るアンテナが鋭く、言葉・音・色・空間など何らかの表現手段を持っています。創造することで癒される人です。',
+    advice: '今世のあなたは「美と才能」を世界に解放することが使命です。表現活動をまだしていないなら今すぐ始めてください。美的センスをビジネスに活かすことでお金と使命が一致します。'
+  },
+  inari: {
+    icon: '🦊', name: '稲荷大神', sub: 'Inari — 縁・豊穣・変化の神',
+    essence: '稲荷大神は、商売繁盛・縁結びを司る神。変化自在のキツネを使いとし、人と人・人と機会をつなぐ絶妙な縁を操ります。流れに乗る術を知り、タイミングを見極める直感の鋭い魂です。',
+    traits: ['強い直感', '縁をつなぐ力', '柔軟性', '繁栄引き寄せ', '変幻自在'],
+    traitDesc: 'あなたの魂は「縁結び型」。気がつくと周囲の人をつなぐ役割になっていませんか？直感が鋭く、「あの人に会っておいた方がいい」という感覚がよく当たります。',
+    advice: '今世のあなたは「縁と豊かさの流れ」を作る役割があります。人脈をつなぐ・コミュニティを育てるなど、「つなぐ」仕事で才能が開花します。直感を信じて動くと、不思議なほどタイミングよく機会が訪れます。'
+  },
+  daikoku: {
+    icon: '🌾', name: '大黒天', sub: 'Daikokuten — 豊穣と財運の神',
+    essence: '大黒天は、食物・財富・繁栄を司る神。どんな場所にも豊かさをもたらし、大地の恵みを人々に分け与えます。笑顔と包容力で周囲を幸福にする、大きな愛の魂です。',
+    traits: ['豊かさの引き寄せ', '大らかさ', '実直さ', '奉仕の心', '財運'],
+    traitDesc: 'あなたの魂は「豊穣型」。存在するだけで周囲に安心感と豊かさをもたらします。欲張らず、自然と必要なものが集まってくる不思議な引力があります。',
+    advice: '今世のあなたは「豊かさを循環させる」ことが使命です。受け取ることと与えることのバランスを大切にしてください。商売・農業・食・不動産など「地に足のついた豊かさ」に縁があります。'
+  },
+  ebisu: {
+    icon: '🐟', name: '恵比寿', sub: 'Ebisu — 商売繁盛と縁起の神',
+    essence: '恵比寿は、釣りと商売繁盛を司る七福神の一柱。勤勉・誠実・楽観的なエネルギーで、働くことそのものを喜びに変える力を持ちます。笑顔で縁起を呼び込む、明朗快活な魂です。',
+    traits: ['商才', '誠実さ', '楽観性', '勤勉さ', '人懐っこさ'],
+    traitDesc: 'あなたの魂は「商人型」。働くことが好きで、人との取引や交流の中にこそ喜びを見出します。自然と笑顔が出て、周囲の雰囲気を明るくする力があります。',
+    advice: '今世のあなたは「誠実な商い」を通じて豊かさを築くことが使命です。副業・フリーランス・小商いなど、小さくてもリアルな商売から始めると運気が開きます。愚直に続けることが最大の武器です。'
+  },
+  bishamonten: {
+    icon: '🗡️', name: '毘沙門天', sub: 'Bishamonten — 戦・守護・勝利の神',
+    essence: '毘沙門天は、武神にして守護神。邪を退け、正義を貫き、勝利を導く強さの象徴です。どんな逆境にも屈せず、守るべきものを守り抜く、揺るぎない意志の魂です。',
+    traits: ['強い意志力', '正義感', '守護力', '勝負強さ', '克己心'],
+    traitDesc: 'あなたの魂は「武神型」。目標に向かう集中力と、逆境をバネに変えるパワーが際立っています。曲がったことが嫌いで、弱者を守ろうとする正義感が強い人です。',
+    advice: '今世のあなたは「守護者・勝負師」として生きることが使命です。スポーツ・競争・戦略的ビジネスなど「勝ち負けのある場」で才能が開花します。挑戦を避けず、むしろ困難な場に飛び込むほど魂が輝きます。'
+  },
+  okuninushi: {
+    icon: '🌿', name: '大国主命', sub: 'Okuninushi — 縁結びと国造りの神',
+    essence: '大国主命は、縁結びと国土開発を司る偉大な神。すべての生き物に慈愛を注ぎ、縁をつむぎ、国を豊かに育てました。人を愛し、愛されることで世界を広げていく、深い愛の魂です。',
+    traits: ['深い愛情', '縁結び', '包容力', '開拓精神', 'カリスマ性'],
+    traitDesc: 'あなたの魂は「愛の国造り型」。人の縁を育て、繋がりを丁寧に積み重ねていきます。愛されキャラでもあり、自然と人が集まってきます。',
+    advice: '今世のあなたは「縁を育む国造り」が使命です。コミュニティ運営・地域活性・人材育成など、「人を育て繋げる」仕事で本領発揮します。恋愛・結婚においても縁を大切にすると人生が豊かになります。'
+  },
+  konohana: {
+    icon: '🌸', name: '木花咲耶姫', sub: 'Konohanasakuyahime — 花・美・誕生の女神',
+    essence: '木花咲耶姫は、桜の花のように咲き誇る美の女神。一瞬の美しさの中に永遠を見せ、生命の誕生と再生を司ります。儚いからこそ輝く、その瞬間に全力を注ぐ魂です。',
+    traits: ['美しさ', '純粋さ', '瞬発力', '生命力', 'はかなさの中の強さ'],
+    traitDesc: 'あなたの魂は「桜型」。その場に咲き、誰かの心に深く刻まれる存在です。今この瞬間を全力で生きることに長けており、過去や未来よりも「今ここ」に輝きがあります。',
+    advice: '今世のあなたは「今この瞬間を美しく生きる」ことが使命です。美容・ファッション・花・アート・助産など「生命と美」に関わる仕事で魂が喜びます。「今すぐ咲く」決断が人生を開きます。'
+  },
+  seoritsu: {
+    icon: '💧', name: '瀬織津姫', sub: 'Seoritsuhime — 浄化と流れの女神',
+    essence: '瀬織津姫は、川の流れに乗って罪や穢れを洗い流す浄化の女神。滞ったものを流し、新しい流れを生み出す力を持ちます。感受性が鋭く、見えない世界とつながる透明な魂です。',
+    traits: ['高い感受性', '浄化の力', '霊性', 'しなやかさ', '透明な直感'],
+    traitDesc: 'あなたの魂は「清流型」。人や場のエネルギーを敏感に感じ取り、淀んだものを自然に浄化します。感受性が強すぎて疲れることもありますが、それはギフトです。',
+    advice: '今世のあなたは「浄化と再生の担い手」です。ヒーリング・浄化ワーク・カウンセリング・水に関わる仕事で才能が開花します。自分自身が「清らかな流れ」の中にいるとき、最大のパワーを発揮できます。水辺や自然の中でエネルギーを整えてください。'
+  },
+  kukuri: {
+    icon: '🌀', name: '菊理媛神', sub: 'Kukurihime — 調和と仲裁の女神',
+    essence: '菊理媛神は、イザナギとイザナミを仲裁したとされる謎多き女神。対立するものを結び、矛盾を調和させる力を持ちます。言葉少なくも、的確な一言で世界を変える知恵の魂です。',
+    traits: ['高い調和力', '深い知恵', '仲裁力', '神秘性', '言葉の力'],
+    traitDesc: 'あなたの魂は「調和型」。対立する二者の間に入り、双方を納得させる不思議な力があります。普段は静かですが、ここぞという場面で放つ言葉が人の心を動かします。',
+    advice: '今世のあなたは「対立を超えた調和」を作ることが使命です。調停・コーチング・外交・チームビルディングなど「間をつなぐ」役割で才能が開花します。あなたが「この場は大丈夫」と感じたとき、本当に場が整います。その直感を信じてください。'
+  },
+};
+
+/* ===== 状態 ===== */
+let currentQ = 0;
+const scores = {};
+Object.keys(gods).forEach(k => scores[k] = 0);
+
+/* ===== 画面切替 ===== */
+function show(id) {
+  ['topScreen','quizScreen','resultScreen'].forEach(s => {
+    document.getElementById(s).style.display = 'none';
+  });
+  document.getElementById(id).style.display = 'block';
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+function startQuiz() {
+  show('quizScreen');
+  renderQuestion();
+}
+
+/* ===== 質問描画 ===== */
+function renderQuestion() {
+  const q = questions[currentQ];
+  document.getElementById('qCountText').textContent = `第 ${currentQ+1} 問`;
+  document.getElementById('qCountNum').textContent  = `${currentQ+1} / ${questions.length}`;
+  document.getElementById('progressFill').style.width = `${(currentQ/questions.length)*100}%`;
+  document.getElementById('qIcon').textContent = q.icon;
+  document.getElementById('qText').textContent = q.text;
+
+  const card = document.getElementById('questionCard');
+  card.classList.remove('fade-in'); void card.offsetWidth; card.classList.add('fade-in');
+
+  const choicesEl = document.getElementById('choices');
+  choicesEl.innerHTML = '';
+  q.choices.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = c.text;
+    btn.onclick = () => selectChoice(c.score, btn);
+    choicesEl.appendChild(btn);
   });
 }
 
-function saveData() {
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    setDoc(docRef, { events, postLog, todayStatus });
+/* ===== 選択 ===== */
+function selectChoice(score, btn) {
+  document.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
+  btn.classList.add('selected');
+  Object.keys(score).forEach(k => { scores[k] += score[k]; });
+  setTimeout(() => {
+    currentQ++;
+    if (currentQ < questions.length) renderQuestion();
+    else showResult();
   }, 500);
 }
 
-// ===== テーマ =====
-const THEMES = {
-  far: [
-    { icon: '🌊', text: '最近ちょっとモヤってたこと、、、', hint: '答えを出さなくていい。モヤのまま、言葉にしてみる。' },
-    { icon: '🔍', text: 'ふと、あれ？って思った瞬間、、、', hint: 'どんな小さなことでも。その「あれ？」をそのまま書いてみる。' },
-    { icon: '🌱', text: '誰かの言葉で、なんか残ったやつ、、、', hint: '最近聞いた言葉や読んだ言葉で、なぜか引っかかったものを。' },
-    { icon: '🌀', text: 'まだうまく言えないんだけど、なんか、、、', hint: '言葉にならなくていい。近い言葉を探してみる。' },
-    { icon: '☁️', text: 'なんか最近、気になってること、、、', hint: '理由はなくていい。気になってること、そのまま書いてみる。' },
-    { icon: '🍃', text: 'なんとなく、ちがうなって感じた瞬間、、、', hint: 'ちがうと感じた、そのままを。正しくなくていい。' },
-  ],
-  mid: [
-    { icon: '💫', text: 'ほどけていくって、私にとっては、、、', hint: '足すんじゃなく、ほどけていく。あなたにとってそれはどういう体験？' },
-    { icon: '🔑', text: '自分の中に答えがあるなと感じた瞬間、、、', hint: 'いつ、どんな場面で気づいた？ひとつのエピソードを。' },
-    { icon: '✨', text: 'いまイチだったあの頃って、、、', hint: 'あの頃の自分に、今なら何か言えそう？' },
-    { icon: '🌙', text: '探究してて面白かったこと、最近、、、', hint: '答えじゃなくて、問いそのものが面白かったことを。' },
-    { icon: '🪞', text: 'そっか、そういうことか、ってなった瞬間、、、', hint: 'ふと腑に落ちた、あの瞬間。どんな場面だった？' },
-  ],
-  near: [
-    { icon: '🎨', text: 'セッションで「あ、」ってなった瞬間、、、', hint: 'クライアントが気づいた瞬間、あなたが目撃したもの。' },
-    { icon: '🌿', text: '待ってたら、出てきた、あれ、、、', hint: '焦らずただそこにいたら、起きたこと。' },
-    { icon: '💡', text: '今、これだけは確かだなと思ってること、、、', hint: '長年の探究の中で、今確信していること。ひとつだけ。' },
-  ],
-  soon: [
-    { icon: '🚀', text: 'こんな人に来てほしいな、正直、、、', hint: '誰かに語りかけるように。自然な言葉で。' },
-    { icon: '🌸', text: 'このセッションで起きること、たぶん、、、', hint: 'あなたが感じていることを、そのまま。' },
-  ],
-  tomorrow: [
-    { icon: '🌅', text: '明日を前に、今感じてること、、、', hint: 'ワクワクでも緊張でも。今この感じをそのまま。' },
-  ]
-};
+/* ===== 結果 ===== */
+function showResult() {
+  document.getElementById('progressFill').style.width = '100%';
+  const topGod = Object.entries(scores).sort((a,b) => b[1]-a[1])[0][0];
+  const g = gods[topGod];
 
-function getThemeArr(daysLeft) {
-  if (daysLeft > 21) return THEMES.far;
-  if (daysLeft > 7)  return THEMES.mid;
-  if (daysLeft > 3)  return THEMES.near;
-  if (daysLeft > 1)  return THEMES.soon;
-  return THEMES.tomorrow;
+  document.getElementById('resultImageWrap').innerHTML   = godImages[topGod] || '';
+  document.getElementById('resultName').textContent      = g.name;
+  document.getElementById('resultSub').textContent       = g.sub;
+  document.getElementById('resultEssence').textContent   = g.essence;
+  document.getElementById('resultTraitDesc').textContent = g.traitDesc;
+  document.getElementById('resultAdvice').textContent    = g.advice;
+
+  const traitsEl = document.getElementById('resultTraits');
+  traitsEl.innerHTML = '';
+  g.traits.forEach(t => {
+    const tag = document.createElement('span');
+    tag.className = 'trait-tag'; tag.textContent = t;
+    traitsEl.appendChild(tag);
+  });
+
+  const url  = encodeURIComponent(location.href);
+  const text = encodeURIComponent(`私の魂の神様は「${g.name}」でした！\n${g.sub}\n\nあなたの魂の神様は？\n#魂の神様診断`);
+  document.getElementById('shareX').href    = `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
+  document.getElementById('shareLine').href = `https://line.me/R/msg/text/?${text}%0A${url}`;
+  document.getElementById('shareFb').href   = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+
+  show('resultScreen');
 }
 
-function pickTheme(daysLeft) {
-  const arr = getThemeArr(daysLeft);
-  return arr[Math.floor(Math.random() * arr.length)];
+function copyLink() {
+  navigator.clipboard.writeText(location.href).then(() => {
+    showToast('リンクをコピーしました');
+  });
 }
 
-// ===== ページ切り替え =====
-function showPage(id, btn) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-  document.getElementById('page-' + id).classList.add('active');
-  if (btn) btn.classList.add('active');
-  if (id === 'today')    renderToday();
-  if (id === 'calendar') renderEventList();
-  if (id === 'schedule') renderSchedule();
-  if (id === 'log')      renderLog();
+function shareInstagram() {
+  const name = document.getElementById('resultName').textContent;
+  const text = `私の魂の神様は「${name}」でした！\n#魂の神様診断\n${location.href}`;
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('テキストをコピーしました。Instagramに貼り付けてシェアしてください 📷');
+    setTimeout(() => {
+      window.open('https://www.instagram.com/', '_blank');
+    }, 800);
+  });
 }
 
-// ===== 今日 =====
-function renderToday() {
-  const today = new Date();
-  document.getElementById('today-date').textContent =
-    today.toLocaleDateString('ja-JP', { year:'numeric', month:'long', day:'numeric', weekday:'long' });
-
-  const upcoming = getUpcomingEvents();
-  const countdownArea = document.getElementById('event-countdown-area');
-
-  if (!upcoming.length) {
-    document.getElementById('theme-icon').textContent = '🌸';
-    document.getElementById('theme-text').textContent = 'まず、イベントを登録しよう';
-    document.getElementById('theme-hint').textContent = '「イベント」タブから日程を追加すると、今日のテーマが現れます。';
-    countdownArea.innerHTML = '';
-    return;
-  }
-
-  const next = upcoming[0];
-  countdownArea.innerHTML = `
-    <div class="event-countdown">
-      <span>📅</span>
-      <span class="name">${next.name}</span>
-      <span>まで</span>
-      <span class="days">${next.daysLeft}</span>
-      <span>日</span>
-    </div>`;
-
-  const dateKey = today.toISOString().split('T')[0];
-  if (!todayStatus[dateKey]?.theme) {
-    const theme = pickTheme(next.daysLeft);
-    todayStatus[dateKey] = { ...(todayStatus[dateKey]||{}), theme, daysLeft: next.daysLeft };
-    saveData();
-  }
-  applyTheme(todayStatus[dateKey].theme);
-
-  if (todayStatus[dateKey]?.text) {
-    document.getElementById('write-text').value = todayStatus[dateKey].text;
-    updateCharCount();
-  }
-  const btn = document.getElementById('btn-done');
-  if (todayStatus[dateKey]?.posted) {
-    btn.textContent = '✓ 今日は投稿した！'; btn.classList.add('posted');
-  } else {
-    btn.textContent = '✓ 投稿した！'; btn.classList.remove('posted');
-  }
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
 }
 
-function applyTheme(t) {
-  document.getElementById('theme-icon').textContent = t.icon;
-  document.getElementById('theme-text').textContent = t.text;
-  document.getElementById('theme-hint').textContent = t.hint;
+function resetQuiz() {
+  Object.keys(scores).forEach(k => scores[k] = 0);
+  currentQ = 0;
+  document.getElementById('progressFill').style.width = '0%';
+  show('topScreen');
 }
-
-function refreshTheme() {
-  const upcoming = getUpcomingEvents();
-  if (!upcoming.length) return;
-  const dateKey = new Date().toISOString().split('T')[0];
-  const daysLeft = todayStatus[dateKey]?.daysLeft ?? upcoming[0].daysLeft;
-  const theme = pickTheme(daysLeft);
-  todayStatus[dateKey] = { ...(todayStatus[dateKey]||{}), theme };
-  saveData();
-  applyTheme(theme);
-}
-
-function updateCharCount() {
-  const len = document.getElementById('write-text').value.length;
-  document.getElementById('char-count').textContent = len;
-  const dateKey = new Date().toISOString().split('T')[0];
-  todayStatus[dateKey] = { ...(todayStatus[dateKey]||{}), text: document.getElementById('write-text').value };
-  saveData();
-}
-
-function markPosted() {
-  const dateKey = new Date().toISOString().split('T')[0];
-  todayStatus[dateKey] = { ...(todayStatus[dateKey]||{}), posted: true };
-  const text = document.getElementById('write-text').value;
-  const theme = todayStatus[dateKey].theme;
-  postLog.push({ date: dateKey, theme: theme?.text||'', text });
-  saveData();
-  const btn = document.getElementById('btn-done');
-  btn.textContent = '✓ 今日は投稿した！'; btn.classList.add('posted');
-}
-
-function markSkip() {
-  const dateKey = new Date().toISOString().split('T')[0];
-  todayStatus[dateKey] = { ...(todayStatus[dateKey]||{}), skipped: true };
-  saveData();
-  alert('それでいい。また明日 ☻');
-}
-
-// ===== イベント =====
-function addEvent() {
-  const name = document.getElementById('event-name').value.trim();
-  const date = document.getElementById('event-date').value;
-  const type = document.getElementById('event-type').value;
-  if (!name || !date) { alert('イベント名と日付を入力してください'); return; }
-  events.push({ id: Date.now(), name, date, type });
-  saveData();
-  document.getElementById('event-name').value = '';
-  document.getElementById('event-date').value = '';
-  renderEventList();
-}
-
-function deleteEvent(id) {
-  events = events.filter(e => e.id !== id);
-  saveData();
-  renderEventList();
-}
-
-function getUpcomingEvents() {
-  const today = new Date(); today.setHours(0,0,0,0);
-  return events
-    .map(e => ({ ...e, daysLeft: Math.ceil((new Date(e.date+'T00:00:00') - today) / 86400000) }))
-    .filter(e => e.daysLeft >= 0)
-    .sort((a,b) => a.daysLeft - b.daysLeft);
-}
-
-function renderEventList() {
-  const list = document.getElementById('event-list');
-  const upcoming = getUpcomingEvents();
-  if (!upcoming.length) { list.innerHTML = '<div class="empty-state">まだ登録されていません</div>'; return; }
-  list.innerHTML = upcoming.map(e => `
-    <div class="event-item">
-      <div>
-        <div class="event-name">${e.name}</div>
-        <div class="event-date-txt">${new Date(e.date+'T00:00:00').toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'})}</div>
-      </div>
-      <div style="display:flex;align-items:center">
-        <div class="event-days-left">
-          <div class="num">${e.daysLeft}</div>
-          <div class="unit">日後</div>
-        </div>
-        <button class="btn-delete" onclick="deleteEvent(${e.id})">×</button>
-      </div>
-    </div>`).join('');
-}
-
-// ===== スケジュール =====
-function renderSchedule() {
-  const upcoming = getUpcomingEvents();
-  const container = document.getElementById('schedule-content');
-  if (!upcoming.length) { container.innerHTML = '<div class="empty-state">イベントを登録すると<br>ここに流れが表示されます</div>'; return; }
-  const next = upcoming[0];
-  const phases = [
-    { label: '3週間以上前', theme: '日常の気づき・モヤ', desc: '日々の違和感や問いをそのまま言葉に', done: next.daysLeft < 21 },
-    { label: '2週間前', theme: '自分の内側への問い', desc: '体験談や気づきを探究しながら', done: next.daysLeft < 14 },
-    { label: '1週間前', theme: 'セッションの体験談', desc: 'あなたが目撃した変化や気づきを', done: next.daysLeft < 7 },
-    { label: '3日前', theme: 'さりげない案内', desc: 'こんな人に来てほしい、という気持ちを', done: next.daysLeft < 3 },
-    { label: '前日', theme: '明日への気持ち', desc: 'ワクワクも緊張もそのまま', done: next.daysLeft < 1 },
-    { label: '当日', theme: next.name, desc: '今日がその日！', done: next.daysLeft === 0 },
-  ];
-  container.innerHTML = `
-    <div class="next-event-banner">
-      <div class="label">次のイベント</div>
-      <div class="name">${next.name}</div>
-      <div class="days">あと ${next.daysLeft} 日</div>
-    </div>
-    ${phases.map((p,i) => `
-      <div class="schedule-item">
-        <div class="schedule-dot-wrap">
-          <div class="schedule-dot ${p.done?'done':'future'}"></div>
-          ${i<phases.length-1?'<div class="schedule-line"></div>':''}
-        </div>
-        <div class="schedule-content">
-          <div class="schedule-day">${p.label}</div>
-          <div class="schedule-theme">${p.theme}</div>
-          <div class="schedule-desc">${p.desc}</div>
-        </div>
-      </div>`).join('')}`;
-}
-
-// ===== 記録 =====
-function renderLog() {
-  document.getElementById('stat-posted').textContent = postLog.length;
-  let streak = 0;
-  const today = new Date();
-  for (let i = 0; i < 365; i++) {
-    const d = new Date(today); d.setDate(d.getDate()-i);
-    const key = d.toISOString().split('T')[0];
-    if (todayStatus[key]?.posted) streak++;
-    else if (i > 0) break;
-  }
-  document.getElementById('stat-streak').textContent = streak;
-  const logEl = document.getElementById('post-log');
-  if (!postLog.length) { logEl.innerHTML = '<div class="empty-state">投稿した記録が<br>ここに積み重なっていきます</div>'; return; }
-  logEl.innerHTML = [...postLog].reverse().map(p => `
-    <div class="post-log-item">
-      <div class="post-log-date">${new Date(p.date+'T00:00:00').toLocaleDateString('ja-JP',{month:'long',day:'numeric'})}</div>
-      <div class="post-log-theme">${p.theme}</div>
-      <div class="post-log-text">${p.text?p.text.slice(0,80)+(p.text.length>80?'…':''):'（メモなし）'}</div>
-    </div>`).join('');
-}
-
-// HTML onclick から呼べるようにグローバル公開
-window.showPage = showPage;
-window.refreshTheme = refreshTheme;
-window.updateCharCount = updateCharCount;
-window.markPosted = markPosted;
-window.markSkip = markSkip;
-window.addEvent = addEvent;
-window.deleteEvent = deleteEvent;
-
-loadData();
 </script>
 </body>
 </html>
